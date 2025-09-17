@@ -10,6 +10,16 @@ import {
   type SystemServiceStatus,
   type HealthCheckResult,
   type AuditLogEntry,
+  type CoinMetric,
+  type TreasurySnapshot,
+  type RiskAlert,
+  type LiquidityPool,
+  type ComplianceTask,
+  type WalletActivity,
+  type ReleaseEvent,
+  type GovernanceProposal,
+  type MarketMaker,
+  type NodeStatus,
 } from '../types';
 import { toast } from 'sonner';
 
@@ -75,6 +85,172 @@ const auditLogs: AuditLogEntry[] = Array.from({ length: 12 }, (_, index) => {
 });
 
 // Using JSON loaders instead of in-memory mock arrays. The data is loaded by loadProducts, loadOrders, and loadCustomers.
+
+const metricsNow = Date.now();
+
+const coinMetrics: CoinMetric[] = [
+    { id: 'price', label: 'Token price', value: 1.34, unit: 'USD', change24h: 2.6, trend: 'up' },
+    { id: 'marketCap', label: 'Market cap', value: 382_000_000, unit: 'USD', change24h: -1.8, trend: 'down' },
+    { id: 'circulating', label: 'Circulating supply', value: 274_000_000, unit: 'COUNT', change24h: 0.5, trend: 'up' },
+    { id: 'staked', label: 'Staked ratio', value: 0.61, unit: 'PCT', change24h: 1.2, trend: 'up' },
+    { id: 'volume', label: '24h volume', value: 21_400_000, unit: 'USD', change24h: 6.4, trend: 'up' },
+    { id: 'volatility', label: '30d volatility', value: 0.24, unit: 'PCT', change24h: -0.7, trend: 'down' },
+];
+
+const treasurySnapshot: TreasurySnapshot = {
+    totalValueUsd: 188_500_000,
+    change24hPct: 1.9,
+    hedgedRatio: 0.67,
+    burnRateUsd: 4_200_000,
+    runwayMonths: 28,
+    insuranceCoverageUsd: 92_000_000,
+    assets: [
+        { asset: 'USDC', chain: 'Ethereum', allocationPct: 0.32, balance: 60_500_000, valueUsd: 60_500_000, type: 'Stablecoin', yieldPct: 0.035 },
+        { asset: 'ETH', chain: 'Ethereum', allocationPct: 0.18, balance: 15_800, valueUsd: 48_300_000, type: 'Native' },
+        { asset: 'stETH', chain: 'Ethereum', allocationPct: 0.22, balance: 13_400, valueUsd: 41_900_000, type: 'Yield', yieldPct: 0.045 },
+        { asset: 'COIN-USD LP', chain: 'Solana', allocationPct: 0.12, balance: 9_600_000, valueUsd: 22_600_000, type: 'Liquidity', yieldPct: 0.082 },
+        { asset: 'USDT', chain: 'Polygon', allocationPct: 0.08, balance: 12_400_000, valueUsd: 12_400_000, type: 'Stablecoin' },
+        { asset: 'BTC', chain: 'Bitcoin', allocationPct: 0.08, balance: 1_150, valueUsd: 22_800_000, type: 'Native' },
+    ],
+    liabilities: [
+        { label: 'Market maker credit line', amountUsd: 18_000_000, dueDate: new Date(metricsNow + 1000 * 60 * 60 * 24 * 45).toISOString() },
+        { label: 'Operational expenses (30d)', amountUsd: 4_800_000 },
+    ],
+};
+
+const liquidityPools: LiquidityPool[] = [
+    { id: 'lp-1', pool: 'COIN/USDC', chain: 'Ethereum', tvlUsd: 32_800_000, volume24hUsd: 5_400_000, apyPct: 0.087, status: 'optimal', depthScore: 92 },
+    { id: 'lp-2', pool: 'COIN/USDT', chain: 'Polygon', tvlUsd: 14_200_000, volume24hUsd: 1_800_000, apyPct: 0.063, status: 'watch', depthScore: 78 },
+    { id: 'lp-3', pool: 'COIN/SOL', chain: 'Solana', tvlUsd: 9_600_000, volume24hUsd: 1_100_000, apyPct: 0.098, status: 'optimal', depthScore: 85 },
+    { id: 'lp-4', pool: 'COIN/BTC', chain: 'Arbitrum', tvlUsd: 6_800_000, volume24hUsd: 950_000, apyPct: 0.071, status: 'watch', depthScore: 73 },
+];
+
+const marketMakers: MarketMaker[] = [
+    { id: 'mm-1', name: 'FalconX', region: 'US', status: 'connected', depthScore: 94, lastHeartbeat: new Date(metricsNow - 1000 * 60 * 3).toISOString() },
+    { id: 'mm-2', name: 'Wintermute', region: 'EU', status: 'connected', depthScore: 91, lastHeartbeat: new Date(metricsNow - 1000 * 60 * 5).toISOString() },
+    { id: 'mm-3', name: 'Amber', region: 'APAC', status: 'degraded', depthScore: 76, lastHeartbeat: new Date(metricsNow - 1000 * 60 * 19).toISOString() },
+];
+
+const nodeStatuses: NodeStatus[] = [
+    { id: 'node-1', region: 'US-East', provider: 'AWS', version: 'v1.18.4', status: 'healthy', blockHeight: 18_453_221, peers: 48, latencyMs: 43 },
+    { id: 'node-2', region: 'EU-West', provider: 'GCP', version: 'v1.18.4', status: 'healthy', blockHeight: 18_453_217, peers: 52, latencyMs: 51 },
+    { id: 'node-3', region: 'APAC', provider: 'Azure', version: 'v1.18.3', status: 'degraded', blockHeight: 18_452_998, peers: 36, latencyMs: 82 },
+];
+
+const riskAlerts: RiskAlert[] = [
+    {
+        id: 'risk-1',
+        title: 'Liquidity coverage below policy on Polygon',
+        severity: 'medium',
+        description: 'Utilisation reached 92% of available liquidity bands. Consider rebalancing stablecoin reserves.',
+        detectedAt: new Date(metricsNow - 1000 * 60 * 45).toISOString(),
+        acknowledged: false,
+        area: 'liquidity',
+        impact: 'Coverage 92% (target 105%)',
+    },
+    {
+        id: 'risk-2',
+        title: 'Increased volatility vs BTC',
+        severity: 'high',
+        description: '30d beta climbed to 1.42 indicating outsized swings vs benchmark.',
+        detectedAt: new Date(metricsNow - 1000 * 60 * 60 * 5).toISOString(),
+        acknowledged: true,
+        area: 'market',
+        impact: 'Potential slippage for large orders',
+    },
+    {
+        id: 'risk-3',
+        title: 'Staking validator downtime',
+        severity: 'low',
+        description: 'Validator asia-3 experienced 0.4% downtime in the last epoch.',
+        detectedAt: new Date(metricsNow - 1000 * 60 * 30).toISOString(),
+        acknowledged: false,
+        area: 'security',
+    },
+    {
+        id: 'risk-4',
+        title: 'KYC refresh overdue for market maker',
+        severity: 'medium',
+        description: 'Annual compliance review pending for Amber (APAC).',
+        detectedAt: new Date(metricsNow - 1000 * 60 * 60 * 24 * 3).toISOString(),
+        acknowledged: true,
+        area: 'compliance',
+    },
+];
+
+const complianceTasks: ComplianceTask[] = [
+    { id: 'comp-1', title: 'File MAS quarterly report', owner: 'J. Goh', dueDate: new Date(metricsNow + 1000 * 60 * 60 * 24 * 6).toISOString(), status: 'in_progress', category: 'regulation', progress: 65, priority: 'high' },
+    { id: 'comp-2', title: 'Audit smart-contract upgradability', owner: 'D. Alvarez', dueDate: new Date(metricsNow + 1000 * 60 * 60 * 24 * 14).toISOString(), status: 'not_started', category: 'security', progress: 0, priority: 'medium' },
+    { id: 'comp-3', title: 'Treasury reconciliation', owner: 'M. Chen', dueDate: new Date(metricsNow + 1000 * 60 * 60 * 24 * 3).toISOString(), status: 'in_progress', category: 'finance', progress: 45, priority: 'high' },
+    { id: 'comp-4', title: 'DAO vote disclosure', owner: 'A. Rossi', dueDate: new Date(metricsNow + 1000 * 60 * 60 * 24 * 9).toISOString(), status: 'completed', category: 'governance', progress: 100, priority: 'low' },
+];
+
+const walletActivity: WalletActivity[] = [
+    {
+        id: 'tx-1',
+        wallet: 'Treasury-1',
+        type: 'rebalance',
+        direction: 'out',
+        amount: 2_500_000,
+        asset: 'USDC',
+        timestamp: new Date(metricsNow - 1000 * 60 * 12).toISOString(),
+        status: 'completed',
+        counterparty: 'MM - FalconX',
+        txHash: '0x7f6c...a921',
+        chain: 'Ethereum',
+    },
+    {
+        id: 'tx-2',
+        wallet: 'Treasury-2',
+        type: 'mint',
+        direction: 'out',
+        amount: 1_200_000,
+        asset: 'COIN',
+        timestamp: new Date(metricsNow - 1000 * 60 * 60 * 2).toISOString(),
+        status: 'completed',
+        counterparty: 'Custody - Anchorage',
+        txHash: '0x81af...c24e',
+        chain: 'Ethereum',
+    },
+    {
+        id: 'tx-3',
+        wallet: 'Reserves-3',
+        type: 'transfer',
+        direction: 'in',
+        amount: 750_000,
+        asset: 'USDT',
+        timestamp: new Date(metricsNow - 1000 * 60 * 90).toISOString(),
+        status: 'pending',
+        counterparty: 'CEX - Binance',
+        txHash: '0x95bc...2d10',
+        chain: 'Polygon',
+    },
+    {
+        id: 'tx-4',
+        wallet: 'Insurance-1',
+        type: 'transfer',
+        direction: 'in',
+        amount: 480_000,
+        asset: 'USDC',
+        timestamp: new Date(metricsNow - 1000 * 60 * 60 * 4).toISOString(),
+        status: 'completed',
+        counterparty: 'Insurance fund',
+        txHash: '0xb4d8...9f31',
+        chain: 'Ethereum',
+    },
+];
+
+const releaseSchedule: ReleaseEvent[] = [
+    { id: 'rel-1', title: 'Team unlock - tranche 3', asset: 'COIN', amount: 5_000_000, unlockDate: new Date(metricsNow + 1000 * 60 * 60 * 24 * 15).toISOString(), cliff: 'No cliff', status: 'scheduled', notes: 'Linear release over 30 days' },
+    { id: 'rel-2', title: 'Community incentives', asset: 'COIN', amount: 2_500_000, unlockDate: new Date(metricsNow + 1000 * 60 * 60 * 24 * 45).toISOString(), cliff: '30d cliff', status: 'scheduled' },
+    { id: 'rel-3', title: 'Market maker refresh', asset: 'COIN', amount: 1_000_000, unlockDate: new Date(metricsNow - 1000 * 60 * 60 * 24 * 10).toISOString(), cliff: 'Completed', status: 'completed' },
+];
+
+const governanceProposals: GovernanceProposal[] = [
+    { id: 'gov-1', title: 'Proposal #42: Treasury diversification', status: 'active', votingEndsAt: new Date(metricsNow + 1000 * 60 * 60 * 24 * 2).toISOString(), quorumPct: 0.62, supportPct: 0.54 },
+    { id: 'gov-2', title: 'Proposal #41: Validator rewards adjustment', status: 'passed', votingEndsAt: new Date(metricsNow - 1000 * 60 * 60 * 24 * 6).toISOString(), quorumPct: 0.58, supportPct: 0.66 },
+    { id: 'gov-3', title: 'Proposal #40: Ecosystem grants wave 5', status: 'draft', votingEndsAt: new Date(metricsNow + 1000 * 60 * 60 * 24 * 12).toISOString(), quorumPct: 0.0, supportPct: 0.0 },
+];
 
 // --- MOCK API FUNCTIONS ---
 
@@ -351,5 +527,49 @@ export const adminApi = {
     getAuditLogs: async (): Promise<AuditLogEntry[]> => {
         await sleep(400);
         return [...auditLogs];
+    },
+    getCoinMetrics: async (): Promise<CoinMetric[]> => {
+        await sleep(350);
+        return coinMetrics.map(metric => ({ ...metric }));
+    },
+    getTreasurySnapshot: async (): Promise<TreasurySnapshot> => {
+        await sleep(450);
+        return {
+            ...treasurySnapshot,
+            assets: treasurySnapshot.assets.map(asset => ({ ...asset })),
+            liabilities: treasurySnapshot.liabilities.map(liability => ({ ...liability })),
+        };
+    },
+    getLiquidityPools: async (): Promise<LiquidityPool[]> => {
+        await sleep(380);
+        return liquidityPools.map(pool => ({ ...pool }));
+    },
+    getMarketMakers: async (): Promise<MarketMaker[]> => {
+        await sleep(320);
+        return marketMakers.map(maker => ({ ...maker }));
+    },
+    getNodeStatus: async (): Promise<NodeStatus[]> => {
+        await sleep(360);
+        return nodeStatuses.map(node => ({ ...node }));
+    },
+    getRiskAlerts: async (): Promise<RiskAlert[]> => {
+        await sleep(300);
+        return riskAlerts.map(alert => ({ ...alert }));
+    },
+    getComplianceTasks: async (): Promise<ComplianceTask[]> => {
+        await sleep(320);
+        return complianceTasks.map(task => ({ ...task }));
+    },
+    getWalletActivity: async (): Promise<WalletActivity[]> => {
+        await sleep(420);
+        return walletActivity.map(activity => ({ ...activity }));
+    },
+    getReleaseSchedule: async (): Promise<ReleaseEvent[]> => {
+        await sleep(340);
+        return releaseSchedule.map(event => ({ ...event }));
+    },
+    getGovernanceProposals: async (): Promise<GovernanceProposal[]> => {
+        await sleep(360);
+        return governanceProposals.map(proposal => ({ ...proposal }));
     },
 };
