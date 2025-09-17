@@ -11,6 +11,55 @@ export interface User {
   email: string;
   role: UserRole;
   avatarUrl?: string;
+  status?: 'active' | 'invited' | 'suspended';
+  lastActive?: string;
+  createdAt?: string;
+}
+
+export type SystemEnvironment = 'production' | 'staging' | 'development';
+
+export type ServiceStatus = 'operational' | 'degraded' | 'offline';
+
+export interface SystemServiceStatus {
+  name: string;
+  status: ServiceStatus;
+  responseTimeMs: number;
+  dependency?: string;
+}
+
+export interface SystemOverview {
+  uptime: number;
+  version: string;
+  lastDeploy: string;
+  incidentsOpen: number;
+  nextMaintenance: string;
+  environment: SystemEnvironment;
+  services: SystemServiceStatus[];
+}
+
+export interface HealthCheckDetail {
+  name: string;
+  passed: boolean;
+  message: string;
+}
+
+export type HealthStatus = 'healthy' | 'degraded' | 'critical';
+
+export interface HealthCheckResult {
+  checkedAt: string;
+  results: HealthCheckDetail[];
+  overallStatus: HealthStatus;
+}
+
+export interface AuditLogEntry {
+  id: string;
+  action: string;
+  actor: string;
+  target: string;
+  timestamp: string;
+  status: 'success' | 'warning' | 'error';
+  ipAddress?: string;
+  metadata?: Record<string, string | number | boolean>;
 }
 
 export interface Order {
