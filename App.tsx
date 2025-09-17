@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { HashRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 
@@ -34,7 +34,7 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <HashRouter>
+      <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route 
@@ -60,7 +60,7 @@ function App() {
             </Route>
           </Route>
         </Routes>
-      </HashRouter>
+      </BrowserRouter>
       <Toaster richColors position="top-right" />
     </QueryClientProvider>
   );

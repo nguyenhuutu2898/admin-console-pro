@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
+import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { productsApi } from '../../services/api';
 import { Product } from '../../types';
 import { Input } from '../../components/ui/Input';
+import { Select } from '../../components/ui/Select';
 import { Button } from '../../components/ui/Button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/Table';
 import { Card } from '../../components/ui/Card';
@@ -28,12 +29,22 @@ const ProductsPage: React.FC = () => {
   const [page] = useState(1);
   const [limit] = useState(10);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  // UI state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
+  // Applied state
+  const [applied, setApplied] = useState({ q: '', category: '' });
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['products', page, limit],
-    queryFn: () => productsApi.getProducts({ page, limit }),
+    queryKey: ['products', page, limit, applied.q, applied.category],
+    queryFn: () => productsApi.getProducts({ page, limit, q: applied.q, category: applied.category }),
   });
+
+  const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
+  useEffect(() => {
+    productsApi.getCategories().then(setCategoryOptions);
+  }, []);
 
   const createMutation = useMutation({
     mutationFn: productsApi.createProduct,
@@ -52,7 +63,7 @@ const ProductsPage: React.FC = () => {
   });
 
   const form = useForm<ProductFormValues>({
-    resolver: zodResolver(productSchema),
+    resolver: zodResolver(productSchema) as any,
     defaultValues: { name: '', price: 0, stock: 0, category: '' },
   });
 
@@ -66,7 +77,7 @@ const ProductsPage: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const onSubmit = (values: ProductFormValues) => {
+  const onSubmit: SubmitHandler<ProductFormValues> = (values) => {
     if (editingProduct) {
       updateMutation.mutate({ ...editingProduct, ...values });
     } else {
@@ -79,9 +90,36 @@ const ProductsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-3xl font-bold tracking-tight">Products</h1>
-        <Button onClick={() => handleOpenModal()}>Create Product</Button>
+        <div className="flex items-center gap-2">
+          <Input
+            placeholder="Search products..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full md:w-64"
+          />
+          <Select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+            <option value="">All Categories</option>
+            {categoryOptions.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </Select>
+          <Button
+            onClick={() => {
+              setApplied({ q: searchTerm, category: categoryFilter });
+            }}
+          >Apply</Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setSearchTerm('');
+              setCategoryFilter('');
+              setApplied({ q: '', category: '' });
+            }}
+          >Reset</Button>
+          <Button onClick={() => handleOpenModal()}>Create Product</Button>
+        </div>
       </div>
 
       <Card>

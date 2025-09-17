@@ -15,13 +15,28 @@ import { Customer, PaginatedResponse } from '../../types';
 const CustomersPage: React.FC = () => {
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
+  // UI state
   const [searchTerm, setSearchTerm] = useState('');
+  const [minSpent, setMinSpent] = useState<string>('');
+  const [maxSpent, setMaxSpent] = useState<string>('');
+  const [fromJoinDate, setFromJoinDate] = useState<string>('');
+  const [toJoinDate, setToJoinDate] = useState<string>('');
+  // Applied state
+  const [applied, setApplied] = useState({ q: '', min: '', max: '', from: '', to: '' });
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   // FIX: Switched to placeholderData for TanStack Query v5 and added explicit type for useQuery
   const { data, isFetching } = useQuery<PaginatedResponse<Customer>>({
-    queryKey: ['customers', page, limit, debouncedSearchTerm],
-    queryFn: () => customersApi.getCustomers({ page, limit, q: debouncedSearchTerm }),
+    queryKey: ['customers', page, limit, applied.q, applied.min, applied.max, applied.from, applied.to],
+    queryFn: () => customersApi.getCustomers({
+      page,
+      limit,
+      q: applied.q,
+      minSpent: applied.min ? Number(applied.min) : undefined,
+      maxSpent: applied.max ? Number(applied.max) : undefined,
+      fromJoinDate: applied.from || undefined,
+      toJoinDate: applied.to || undefined,
+    }),
     placeholderData: keepPreviousData,
   });
 
@@ -32,12 +47,56 @@ const CustomersPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-3xl font-bold tracking-tight">Customers</h1>
-        <Input
-          placeholder="Search customers..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full md:w-64"
-        />
+        <div className="flex items-center gap-2">
+          <Input
+            placeholder="Search customers..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full md:w-64"
+          />
+          <Input
+            type="number"
+            placeholder="Min spent"
+            value={minSpent}
+            onChange={(e) => setMinSpent(e.target.value)}
+            className="w-28"
+          />
+          <Input
+            type="number"
+            placeholder="Max spent"
+            value={maxSpent}
+            onChange={(e) => setMaxSpent(e.target.value)}
+            className="w-28"
+          />
+          <Input
+            type="date"
+            value={fromJoinDate}
+            onChange={(e) => setFromJoinDate(e.target.value)}
+          />
+          <Input
+            type="date"
+            value={toJoinDate}
+            onChange={(e) => setToJoinDate(e.target.value)}
+          />
+          <Button
+            onClick={() => {
+              setPage(1);
+              setApplied({ q: debouncedSearchTerm, min: minSpent, max: maxSpent, from: fromJoinDate, to: toJoinDate });
+            }}
+          >Apply</Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setSearchTerm('');
+              setMinSpent('');
+              setMaxSpent('');
+              setFromJoinDate('');
+              setToJoinDate('');
+              setPage(1);
+              setApplied({ q: '', min: '', max: '', from: '', to: '' });
+            }}
+          >Reset</Button>
+        </div>
       </div>
 
       <Card>

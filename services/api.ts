@@ -13,7 +13,10 @@ import {
 } from '../types';
 import { toast } from 'sonner';
 
-// --- MOCK DATABASE ---
+// --- DATA LOADING FROM PUBLIC JSON ---
+let cachedProducts: Product[] | null = null;
+let cachedOrders: Order[] | null = null;
+let cachedCustomers: Customer[] | null = null;
 const users: User[] = [
     {
         id: '1',
@@ -78,40 +81,28 @@ const auditLogs: AuditLogEntry[] = Array.from({ length: 12 }, (_, index) => {
     } satisfies AuditLogEntry;
 });
 
-const products: Product[] = Array.from({ length: 55 }, (_, i) => ({
-    id: `PROD-${1001 + i}`,
-    name: `Laptop Model ${i % 10 === 0 ? 'XPS' : 'Inspiron'} ${13 + i}`,
-    price: 999.99 + i * 50,
-    stock: 10 + i * 2,
-    category: i % 3 === 0 ? 'Gaming' : 'Business',
-}));
+async function loadProducts(): Promise<Product[]> {
+  if (cachedProducts) return cachedProducts;
+  const res = await fetch('/data/products.json');
+  cachedProducts = await res.json();
+  return cachedProducts!;
+}
 
-const orders: Order[] = Array.from({ length: 120 }, (_, i) => {
-    const statusOptions: Order['status'][] = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
-    const date = new Date();
-    date.setDate(date.getDate() - i);
-    return {
-        id: `ORD-${2024001 + i}`,
-        customerName: `Customer ${i + 1}`,
-        customerEmail: `customer${i + 1}@example.com`,
-        total: Math.round((Math.random() * 500 + 50) * 100) / 100,
-        status: statusOptions[i % statusOptions.length],
-        date: date.toISOString().split('T')[0],
-    };
-});
+async function loadOrders(): Promise<Order[]> {
+  if (cachedOrders) return cachedOrders;
+  const res = await fetch('/data/orders.json');
+  cachedOrders = await res.json();
+  return cachedOrders!;
+}
 
-const customers: Customer[] = Array.from({ length: 80 }, (_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() - i * 5);
-    return {
-        id: `CUST-${3001 + i}`,
-        name: `Customer Name ${i + 1}`,
-        email: `customer_name_${i + 1}@email.com`,
-        phone: `555-010${i % 100}`,
-        totalSpent: Math.round((Math.random() * 2000 + 100) * 100) / 100,
-        joinDate: date.toISOString().split('T')[0],
-    };
-});
+async function loadCustomers(): Promise<Customer[]> {
+  if (cachedCustomers) return cachedCustomers;
+  const res = await fetch('/data/customers.json');
+  cachedCustomers = await res.json();
+  return cachedCustomers!;
+}
+
+// Using JSON loaders instead of in-memory mock arrays. The data is loaded by loadProducts, loadOrders, and loadCustomers.
 
 // --- MOCK API FUNCTIONS ---
 
@@ -136,10 +127,11 @@ export const authApi = {
 export const dashboardApi = {
     getKpis: async () => {
         await sleep(800);
+        const allOrders = await loadOrders();
         return {
             totalUsers: users.length,
-            totalOrders: orders.length,
-            totalRevenue: orders.reduce((sum, o) => sum + o.total, 0),
+            totalOrders: allOrders.length,
+            totalRevenue: allOrders.reduce((sum, o) => sum + o.total, 0),
             uptime: 99.98,
         };
     }
@@ -147,9 +139,9 @@ export const dashboardApi = {
 
 // --- Orders Service ---
 export const ordersApi = {
-  getOrders: async ({ page = 1, limit = 10, q = '', status = '' }): Promise<PaginatedResponse<Order>> => {
+  getOrders: async ({ page = 1, limit = 10, q = '', status = '', fromDate, toDate }: { page?: number; limit?: number; q?: string; status?: string; fromDate?: string; toDate?: string; }): Promise<PaginatedResponse<Order>> => {
     await sleep(600);
-    let filteredOrders = orders;
+    let filteredOrders = await loadOrders();
 
     if (q) {
       filteredOrders = filteredOrders.filter(order =>
@@ -161,6 +153,12 @@ export const ordersApi = {
     if (status) {
       filteredOrders = filteredOrders.filter(order => order.status === status);
     }
+    if (fromDate) {
+      filteredOrders = filteredOrders.filter(order => order.date >= fromDate);
+    }
+    if (toDate) {
+      filteredOrders = filteredOrders.filter(order => order.date <= toDate);
+    }
 
     const total = filteredOrders.length;
     const data = filteredOrders.slice((page - 1) * limit, page * limit);
@@ -171,17 +169,24 @@ export const ordersApi = {
 
 // --- Products Service ---
 export const productsApi = {
-  getProducts: async ({ page = 1, limit = 10, q = '' }): Promise<PaginatedResponse<Product>> => {
+  getProducts: async ({ page = 1, limit = 10, q = '', category = '' }): Promise<PaginatedResponse<Product>> => {
     await sleep(600);
-    let filteredProducts = products;
+    let filteredProducts = await loadProducts();
 
     if (q) {
         filteredProducts = filteredProducts.filter(p => p.name.toLowerCase().includes(q.toLowerCase()));
+    }
+    if (category) {
+        filteredProducts = filteredProducts.filter(p => p.category === category);
     }
     
     const total = filteredProducts.length;
     const data = filteredProducts.slice((page - 1) * limit, page * limit);
     return { data, total, page, limit };
+  },
+  getCategories: async (): Promise<string[]> => {
+    const all = await loadProducts();
+    return Array.from(new Set(all.map(p => p.category)));
   },
   createProduct: async (productData: Omit<Product, 'id'>): Promise<Product> => {
     await sleep(500);
@@ -189,17 +194,20 @@ export const productsApi = {
       id: `PROD-${Date.now()}`,
       ...productData,
     };
-    products.unshift(newProduct);
+    const current = await loadProducts();
+    cachedProducts = [newProduct, ...current];
     toast.success("Product created successfully!");
     return newProduct;
   },
   updateProduct: async (productData: Product): Promise<Product> => {
     await sleep(500);
-    const index = products.findIndex(p => p.id === productData.id);
+    const current = await loadProducts();
+    const index = current.findIndex(p => p.id === productData.id);
     if (index !== -1) {
-      products[index] = productData;
+      current[index] = productData;
+      cachedProducts = [...current];
       toast.success("Product updated successfully!");
-      return products[index];
+      return current[index];
     }
     toast.error("Product not found.");
     throw new Error('Product not found');
@@ -208,9 +216,9 @@ export const productsApi = {
 
 // --- Customers Service ---
 export const customersApi = {
-  getCustomers: async ({ page = 1, limit = 10, q = '' }): Promise<PaginatedResponse<Customer>> => {
+  getCustomers: async ({ page = 1, limit = 10, q = '', minSpent, maxSpent, fromJoinDate, toJoinDate }: { page?: number; limit?: number; q?: string; minSpent?: number; maxSpent?: number; fromJoinDate?: string; toJoinDate?: string; }): Promise<PaginatedResponse<Customer>> => {
     await sleep(700);
-    let filteredCustomers = customers;
+    let filteredCustomers = await loadCustomers();
 
     if (q) {
       filteredCustomers = filteredCustomers.filter(c =>
@@ -219,6 +227,19 @@ export const customersApi = {
       );
     }
 
+    if (typeof minSpent === 'number') {
+      filteredCustomers = filteredCustomers.filter(c => c.totalSpent >= minSpent);
+    }
+    if (typeof maxSpent === 'number') {
+      filteredCustomers = filteredCustomers.filter(c => c.totalSpent <= maxSpent);
+    }
+    if (fromJoinDate) {
+      filteredCustomers = filteredCustomers.filter(c => c.joinDate >= fromJoinDate);
+    }
+    if (toJoinDate) {
+      filteredCustomers = filteredCustomers.filter(c => c.joinDate <= toJoinDate);
+    }
+    
     const total = filteredCustomers.length;
     const data = filteredCustomers.slice((page - 1) * limit, page * limit);
     return { data, total, page, limit };
