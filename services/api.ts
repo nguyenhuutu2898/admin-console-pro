@@ -18,9 +18,9 @@ let cachedProducts: Product[] | null = null;
 let cachedOrders: Order[] | null = null;
 let cachedCustomers: Customer[] | null = null;
 const users: User[] = [
-  { id: '1', name: 'Admin User', email: 'admin@gmail.com', role: UserRole.ADMIN, avatarUrl: 'https://i.pravatar.cc/150?u=admin' },
-  { id: '2', name: 'Staff User', email: 'staff@gmail.com', role: UserRole.STAFF, avatarUrl: 'https://i.pravatar.cc/150?u=staff' },
-  { id: '3', name: 'Viewer User', email: 'viewer@gmail.com', role: UserRole.VIEWER, avatarUrl: 'https://i.pravatar.cc/150?u=viewer' },
+  { id: '1', name: 'Admin User', email: 'admin@gmail.com', role: UserRole.ADMIN, avatarUrl: 'https://i.pravatar.cc/150?u=admin', status: 'active', lastActive: new Date().toISOString(), createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 90).toISOString() },
+  { id: '2', name: 'Staff User', email: 'staff@gmail.com', role: UserRole.STAFF, avatarUrl: 'https://i.pravatar.cc/150?u=staff', status: 'active', lastActive: new Date(Date.now() - 1000 * 60 * 30).toISOString(), createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 45).toISOString() },
+  { id: '3', name: 'Viewer User', email: 'viewer@gmail.com', role: UserRole.VIEWER, avatarUrl: 'https://i.pravatar.cc/150?u=viewer', status: 'active', lastActive: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30).toISOString() },
 ];
 
 async function loadProducts(): Promise<Product[]> {
@@ -43,38 +43,7 @@ async function loadCustomers(): Promise<Customer[]> {
   cachedCustomers = await res.json();
   return cachedCustomers!;
 }
-=======
-    {
-        id: '1',
-        name: 'Admin User',
-        email: 'admin@gmail.com',
-        role: UserRole.ADMIN,
-        avatarUrl: 'https://i.pravatar.cc/150?u=admin',
-        status: 'active',
-        lastActive: new Date().toISOString(),
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 90).toISOString(),
-    },
-    {
-        id: '2',
-        name: 'Staff User',
-        email: 'staff@gmail.com',
-        role: UserRole.STAFF,
-        avatarUrl: 'https://i.pravatar.cc/150?u=staff',
-        status: 'active',
-        lastActive: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 45).toISOString(),
-    },
-    {
-        id: '3',
-        name: 'Viewer User',
-        email: 'viewer@gmail.com',
-        role: UserRole.VIEWER,
-        avatarUrl: 'https://i.pravatar.cc/150?u=viewer',
-        status: 'active',
-        lastActive: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30).toISOString(),
-    },
-];
+
 
 const systemServices: SystemServiceStatus[] = [
     { name: 'API Gateway', status: 'operational', responseTimeMs: 182 },
@@ -105,40 +74,7 @@ const auditLogs: AuditLogEntry[] = Array.from({ length: 12 }, (_, index) => {
     } satisfies AuditLogEntry;
 });
 
-const products: Product[] = Array.from({ length: 55 }, (_, i) => ({
-    id: `PROD-${1001 + i}`,
-    name: `Laptop Model ${i % 10 === 0 ? 'XPS' : 'Inspiron'} ${13 + i}`,
-    price: 999.99 + i * 50,
-    stock: 10 + i * 2,
-    category: i % 3 === 0 ? 'Gaming' : 'Business',
-}));
-
-const orders: Order[] = Array.from({ length: 120 }, (_, i) => {
-    const statusOptions: Order['status'][] = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
-    const date = new Date();
-    date.setDate(date.getDate() - i);
-    return {
-        id: `ORD-${2024001 + i}`,
-        customerName: `Customer ${i + 1}`,
-        customerEmail: `customer${i + 1}@example.com`,
-        total: Math.round((Math.random() * 500 + 50) * 100) / 100,
-        status: statusOptions[i % statusOptions.length],
-        date: date.toISOString().split('T')[0],
-    };
-});
-
-const customers: Customer[] = Array.from({ length: 80 }, (_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() - i * 5);
-    return {
-        id: `CUST-${3001 + i}`,
-        name: `Customer Name ${i + 1}`,
-        email: `customer_name_${i + 1}@email.com`,
-        phone: `555-010${i % 100}`,
-        totalSpent: Math.round((Math.random() * 2000 + 100) * 100) / 100,
-        joinDate: date.toISOString().split('T')[0],
-    };
-});
+// Using JSON loaders instead of in-memory mock arrays. The data is loaded by loadProducts, loadOrders, and loadCustomers.
 
 // --- MOCK API FUNCTIONS ---
 
