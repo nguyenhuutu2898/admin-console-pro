@@ -67,7 +67,7 @@ const OrdersPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-3xl font-bold tracking-tight">Orders</h1>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 md:justify-end">
           <Input
             placeholder="Search orders..."
             value={searchTerm}
@@ -77,6 +77,7 @@ const OrdersPage: React.FC = () => {
           <Select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
+            containerClassName="w-full md:w-40"
           >
             <option value="">All Statuses</option>
             <option value="pending">Pending</option>
@@ -85,9 +86,20 @@ const OrdersPage: React.FC = () => {
             <option value="delivered">Delivered</option>
             <option value="cancelled">Cancelled</option>
           </Select>
-          <Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
-          <Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+          <Input
+            type="date"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+            className="w-full md:w-40"
+          />
+          <Input
+            type="date"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+            className="w-full md:w-40"
+          />
           <Button
+            className="w-full md:w-auto"
             onClick={() => {
               setPage(1);
               setApplied({ q: debouncedSearchTerm, status: statusFilter, from: fromDate, to: toDate });
@@ -97,6 +109,7 @@ const OrdersPage: React.FC = () => {
           </Button>
           <Button
             variant="outline"
+            className="w-full md:w-auto"
             onClick={() => {
               setSearchTerm("");
               setStatusFilter("");

@@ -37,6 +37,133 @@ export interface SystemOverview {
   services: SystemServiceStatus[];
 }
 
+export type MetricTrend = 'up' | 'down' | 'flat';
+
+export interface CoinMetric {
+  id: string;
+  label: string;
+  value: number;
+  unit: 'USD' | 'PCT' | 'COUNT';
+  change24h: number;
+  trend: MetricTrend;
+}
+
+export interface TreasuryAsset {
+  asset: string;
+  chain: string;
+  allocationPct: number;
+  balance: number;
+  valueUsd: number;
+  type: 'Stablecoin' | 'Native' | 'Yield' | 'Liquidity';
+  yieldPct?: number;
+}
+
+export interface TreasuryLiability {
+  label: string;
+  amountUsd: number;
+  dueDate?: string;
+}
+
+export interface TreasurySnapshot {
+  totalValueUsd: number;
+  change24hPct: number;
+  hedgedRatio: number;
+  burnRateUsd: number;
+  runwayMonths: number;
+  insuranceCoverageUsd: number;
+  assets: TreasuryAsset[];
+  liabilities: TreasuryLiability[];
+}
+
+export type RiskSeverity = 'low' | 'medium' | 'high' | 'critical';
+
+export interface RiskAlert {
+  id: string;
+  title: string;
+  severity: RiskSeverity;
+  description: string;
+  detectedAt: string;
+  acknowledged: boolean;
+  area: 'market' | 'liquidity' | 'security' | 'compliance';
+  impact?: string;
+}
+
+export interface LiquidityPool {
+  id: string;
+  pool: string;
+  chain: string;
+  tvlUsd: number;
+  volume24hUsd: number;
+  apyPct: number;
+  status: 'optimal' | 'watch' | 'critical';
+  depthScore: number;
+}
+
+export interface MarketMaker {
+  id: string;
+  name: string;
+  region: string;
+  status: 'connected' | 'degraded' | 'offline';
+  depthScore: number;
+  lastHeartbeat: string;
+}
+
+export interface WalletActivity {
+  id: string;
+  wallet: string;
+  type: 'mint' | 'burn' | 'transfer' | 'rebalance';
+  direction: 'in' | 'out';
+  amount: number;
+  asset: string;
+  timestamp: string;
+  status: 'completed' | 'pending' | 'failed';
+  counterparty: string;
+  txHash: string;
+  chain: string;
+}
+
+export interface ComplianceTask {
+  id: string;
+  title: string;
+  owner: string;
+  dueDate: string;
+  status: 'not_started' | 'in_progress' | 'completed' | 'blocked';
+  category: 'regulation' | 'finance' | 'governance' | 'security';
+  progress: number;
+  priority: 'low' | 'medium' | 'high';
+}
+
+export interface ReleaseEvent {
+  id: string;
+  title: string;
+  asset: string;
+  amount: number;
+  unlockDate: string;
+  cliff: string;
+  status: 'scheduled' | 'processing' | 'completed';
+  notes?: string;
+}
+
+export interface GovernanceProposal {
+  id: string;
+  title: string;
+  status: 'active' | 'passed' | 'failed' | 'draft';
+  votingEndsAt: string;
+  quorumPct: number;
+  supportPct: number;
+}
+
+export interface NodeStatus {
+  id: string;
+  region: string;
+  provider: string;
+  version: string;
+  status: 'healthy' | 'degraded' | 'offline';
+  blockHeight: number;
+  peers: number;
+  latencyMs: number;
+}
+
 export interface HealthCheckDetail {
   name: string;
   passed: boolean;

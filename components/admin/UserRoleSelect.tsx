@@ -30,7 +30,7 @@ export const UserRoleSelect: React.FC<UserRoleSelectProps> = ({ value, onChange,
         value={value}
         onChange={event => onChange(event.target.value as UserRole)}
         disabled={disabled}
-        className="max-w-[140px]"
+        containerClassName="max-w-[160px]"
       >
         {Object.values(UserRole).map(role => (
           <SelectItem key={role} value={role}>
