@@ -15,7 +15,11 @@ import CustomersPage from './pages/customers/CustomersPage';
 import AnalyticsPage from './pages/analytics/AnalyticsPage';
 import SettingsPage from './pages/settings/SettingsPage';
 import { useSettingsStore } from './store/settingsStore';
-import AdminPage from './pages/admin/AdminPage';
+import AdminLayout from './pages/admin/AdminLayout';
+import AdminOverviewPage from './pages/admin/AdminOverviewPage';
+import AdminTeamPage from './pages/admin/AdminTeamPage';
+import AdminDiagnosticsPage from './pages/admin/AdminDiagnosticsPage';
+import AdminAuditPage from './pages/admin/AdminAuditPage';
 
 const queryClient = new QueryClient();
 
@@ -48,7 +52,12 @@ function App() {
             <Route path="customers" element={<CustomersPage />} />
             <Route path="analytics" element={<AnalyticsPage />} />
             <Route path="settings" element={<SettingsPage />} />
-            <Route path="admin" element={<AdminPage />} />
+            <Route path="admin" element={<AdminLayout />}>
+              <Route index element={<AdminOverviewPage />} />
+              <Route path="team" element={<AdminTeamPage />} />
+              <Route path="diagnostics" element={<AdminDiagnosticsPage />} />
+              <Route path="audit" element={<AdminAuditPage />} />
+            </Route>
           </Route>
         </Routes>
       </BrowserRouter>

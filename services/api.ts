@@ -18,32 +18,37 @@ let cachedProducts: Product[] | null = null;
 let cachedOrders: Order[] | null = null;
 let cachedCustomers: Customer[] | null = null;
 const users: User[] = [
-  { id: '1', name: 'Admin User', email: 'admin@gmail.com', role: UserRole.ADMIN, avatarUrl: 'https://i.pravatar.cc/150?u=admin', status: 'active', lastActive: new Date().toISOString(), createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 90).toISOString() },
-  { id: '2', name: 'Staff User', email: 'staff@gmail.com', role: UserRole.STAFF, avatarUrl: 'https://i.pravatar.cc/150?u=staff', status: 'active', lastActive: new Date(Date.now() - 1000 * 60 * 30).toISOString(), createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 45).toISOString() },
-  { id: '3', name: 'Viewer User', email: 'viewer@gmail.com', role: UserRole.VIEWER, avatarUrl: 'https://i.pravatar.cc/150?u=viewer', status: 'active', lastActive: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30).toISOString() },
+    {
+        id: '1',
+        name: 'Admin User',
+        email: 'admin@gmail.com',
+        role: UserRole.ADMIN,
+        avatarUrl: 'https://i.pravatar.cc/150?u=admin',
+        status: 'active',
+        lastActive: new Date().toISOString(),
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 90).toISOString(),
+    },
+    {
+        id: '2',
+        name: 'Staff User',
+        email: 'staff@gmail.com',
+        role: UserRole.STAFF,
+        avatarUrl: 'https://i.pravatar.cc/150?u=staff',
+        status: 'active',
+        lastActive: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 45).toISOString(),
+    },
+    {
+        id: '3',
+        name: 'Viewer User',
+        email: 'viewer@gmail.com',
+        role: UserRole.VIEWER,
+        avatarUrl: 'https://i.pravatar.cc/150?u=viewer',
+        status: 'active',
+        lastActive: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30).toISOString(),
+    },
 ];
-
-async function loadProducts(): Promise<Product[]> {
-  if (cachedProducts) return cachedProducts;
-  const res = await fetch('/data/products.json');
-  cachedProducts = await res.json();
-  return cachedProducts!;
-}
-
-async function loadOrders(): Promise<Order[]> {
-  if (cachedOrders) return cachedOrders;
-  const res = await fetch('/data/orders.json');
-  cachedOrders = await res.json();
-  return cachedOrders!;
-}
-
-async function loadCustomers(): Promise<Customer[]> {
-  if (cachedCustomers) return cachedCustomers;
-  const res = await fetch('/data/customers.json');
-  cachedCustomers = await res.json();
-  return cachedCustomers!;
-}
-
 
 const systemServices: SystemServiceStatus[] = [
     { name: 'API Gateway', status: 'operational', responseTimeMs: 182 },
@@ -52,6 +57,8 @@ const systemServices: SystemServiceStatus[] = [
     { name: 'Notifications', status: 'operational', responseTimeMs: 205, dependency: 'Firebase Cloud Messaging' },
     { name: 'Reporting', status: 'operational', responseTimeMs: 264 },
 ];
+
+let latestHealthCheck: HealthCheckResult | null = null;
 
 const auditLogs: AuditLogEntry[] = Array.from({ length: 12 }, (_, index) => {
     const timestamp = new Date(Date.now() - index * 1000 * 60 * 45).toISOString();
@@ -73,6 +80,27 @@ const auditLogs: AuditLogEntry[] = Array.from({ length: 12 }, (_, index) => {
         ipAddress: `10.0.0.${index + 10}`,
     } satisfies AuditLogEntry;
 });
+
+async function loadProducts(): Promise<Product[]> {
+  if (cachedProducts) return cachedProducts;
+  const res = await fetch('/data/products.json');
+  cachedProducts = await res.json();
+  return cachedProducts!;
+}
+
+async function loadOrders(): Promise<Order[]> {
+  if (cachedOrders) return cachedOrders;
+  const res = await fetch('/data/orders.json');
+  cachedOrders = await res.json();
+  return cachedOrders!;
+}
+
+async function loadCustomers(): Promise<Customer[]> {
+  if (cachedCustomers) return cachedCustomers;
+  const res = await fetch('/data/customers.json');
+  cachedCustomers = await res.json();
+  return cachedCustomers!;
+}
 
 // Using JSON loaders instead of in-memory mock arrays. The data is loaded by loadProducts, loadOrders, and loadCustomers.
 
@@ -198,6 +226,7 @@ export const customersApi = {
         c.email.toLowerCase().includes(q.toLowerCase())
       );
     }
+
     if (typeof minSpent === 'number') {
       filteredCustomers = filteredCustomers.filter(c => c.totalSpent >= minSpent);
     }
@@ -338,6 +367,8 @@ export const adminApi = {
             overallStatus: computeHealthStatus(baseResults),
         };
 
+        latestHealthCheck = healthResult;
+
         createAuditLog({
             action: 'Health Check Executed',
             actor: 'Admin User',
@@ -347,6 +378,15 @@ export const adminApi = {
 
         toast.success('Health check completed.');
         return healthResult;
+    },
+    getLatestHealthCheck: async (): Promise<HealthCheckResult | null> => {
+        await sleep(300);
+        return latestHealthCheck
+            ? {
+                ...latestHealthCheck,
+                results: latestHealthCheck.results.map(result => ({ ...result })),
+            }
+            : null;
     },
     getAuditLogs: async (): Promise<AuditLogEntry[]> => {
         await sleep(400);
