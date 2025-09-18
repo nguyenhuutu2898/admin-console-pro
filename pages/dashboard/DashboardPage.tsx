@@ -3,6 +3,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Skeleton } from '../../components/ui/Skeleton';
+import PageHeader from '../../components/layout/PageHeader';
 import { dashboardApi } from '../../services/api';
 import { Users, ShoppingCart, Package } from '../../components/Icons'; // Assuming Package can represent revenue
 
@@ -21,7 +22,7 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+      <PageHeader title="Dashboard" />
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {isLoading ? (
             Array.from({length: 4}).map((_, index) => (

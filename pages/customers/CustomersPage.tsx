@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 // FIX: import keepPreviousData for TanStack Query v5
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
+import PageHeader from '../../components/layout/PageHeader';
 import { customersApi } from '../../services/api';
 import { useDebounce } from '../../hooks/useDebounce';
 import { Input } from '../../components/ui/Input';
@@ -45,59 +46,57 @@ const CustomersPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <h1 className="text-3xl font-bold tracking-tight">Customers</h1>
-        <div className="flex items-center gap-2">
-          <Input
-            placeholder="Search customers..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full md:w-64"
-          />
-          <Input
-            type="number"
-            placeholder="Min spent"
-            value={minSpent}
-            onChange={(e) => setMinSpent(e.target.value)}
-            className="w-28"
-          />
-          <Input
-            type="number"
-            placeholder="Max spent"
-            value={maxSpent}
-            onChange={(e) => setMaxSpent(e.target.value)}
-            className="w-28"
-          />
-          <Input
-            type="date"
-            value={fromJoinDate}
-            onChange={(e) => setFromJoinDate(e.target.value)}
-          />
-          <Input
-            type="date"
-            value={toJoinDate}
-            onChange={(e) => setToJoinDate(e.target.value)}
-          />
-          <Button
-            onClick={() => {
-              setPage(1);
-              setApplied({ q: debouncedSearchTerm, min: minSpent, max: maxSpent, from: fromJoinDate, to: toJoinDate });
-            }}
-          >Apply</Button>
-          <Button
-            variant="outline"
-            onClick={() => {
-              setSearchTerm('');
-              setMinSpent('');
-              setMaxSpent('');
-              setFromJoinDate('');
-              setToJoinDate('');
-              setPage(1);
-              setApplied({ q: '', min: '', max: '', from: '', to: '' });
-            }}
-          >Reset</Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Customers"
+        actions={
+          <>
+            <Input
+              placeholder="Search customers..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full md:w-64"
+            />
+            <Input
+              type="number"
+              placeholder="Min spent"
+              value={minSpent}
+              onChange={(e) => setMinSpent(e.target.value)}
+              className="w-28"
+            />
+            <Input
+              type="number"
+              placeholder="Max spent"
+              value={maxSpent}
+              onChange={(e) => setMaxSpent(e.target.value)}
+              className="w-28"
+            />
+            <Input type="date" value={fromJoinDate} onChange={(e) => setFromJoinDate(e.target.value)} />
+            <Input type="date" value={toJoinDate} onChange={(e) => setToJoinDate(e.target.value)} />
+            <Button
+              onClick={() => {
+                setPage(1);
+                setApplied({ q: debouncedSearchTerm, min: minSpent, max: maxSpent, from: fromJoinDate, to: toJoinDate });
+              }}
+            >
+              Apply
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSearchTerm('');
+                setMinSpent('');
+                setMaxSpent('');
+                setFromJoinDate('');
+                setToJoinDate('');
+                setPage(1);
+                setApplied({ q: '', min: '', max: '', from: '', to: '' });
+              }}
+            >
+              Reset
+            </Button>
+          </>
+        }
+      />
 
       <Card>
         <Table>

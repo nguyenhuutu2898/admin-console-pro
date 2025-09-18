@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
+import PageHeader from '../../components/layout/PageHeader';
 
 // Since recharts is loaded via a UMD script tag, declare it to satisfy TypeScript
 declare const Recharts: any;
@@ -22,7 +23,7 @@ const AnalyticsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
+      <PageHeader title="Analytics" />
       <Card>
         <CardHeader>
           <CardTitle>Sales Overview</CardTitle>

@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import PageHeader from '../../components/layout/PageHeader';
 import { productsApi } from '../../services/api';
 import { Product } from '../../types';
 import { Input } from '../../components/ui/Input';
@@ -90,43 +91,49 @@ const ProductsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <h1 className="text-3xl font-bold tracking-tight">Products</h1>
-        <div className="flex flex-wrap items-center gap-2 md:justify-end">
-          <Input
-            placeholder="Search products..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full md:w-64"
-          />
-          <Select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            containerClassName="w-full md:w-48"
-          >
-            <option value="">All Categories</option>
-            {categoryOptions.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </Select>
-          <Button
-            className="w-full md:w-auto"
-            onClick={() => {
-              setApplied({ q: searchTerm, category: categoryFilter });
-            }}
-          >Apply</Button>
-          <Button
-            variant="outline"
-            className="w-full md:w-auto"
-            onClick={() => {
-              setSearchTerm('');
-              setCategoryFilter('');
-              setApplied({ q: '', category: '' });
-            }}
-          >Reset</Button>
-          <Button className="w-full md:w-auto" onClick={() => handleOpenModal()}>Create Product</Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Products"
+        actions={
+          <>
+            <Input
+              placeholder="Search products..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full md:w-64"
+            />
+            <Select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} containerClassName="w-full md:w-48">
+              <option value="">All Categories</option>
+              {categoryOptions.map(c => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </Select>
+            <Button
+              className="w-full md:w-auto"
+              onClick={() => {
+                setApplied({ q: searchTerm, category: categoryFilter });
+              }}
+            >
+              Apply
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full md:w-auto"
+              onClick={() => {
+                setSearchTerm('');
+                setCategoryFilter('');
+                setApplied({ q: '', category: '' });
+              }}
+            >
+              Reset
+            </Button>
+            <Button className="w-full md:w-auto" onClick={() => handleOpenModal()}>
+              Create Product
+            </Button>
+          </>
+        }
+      />
 
       <Card>
         <Table>

@@ -21,6 +21,7 @@ import {
 } from '../../components/ui/Table';
 import { InviteUserDialog, type InviteUserSchema } from '../../components/admin/InviteUserDialog';
 import { UserRoleSelect } from '../../components/admin/UserRoleSelect';
+import PageHeader from '../../components/layout/PageHeader';
 import { adminApi } from '../../services/api';
 import type {
   AuditLogEntry,
@@ -259,6 +260,9 @@ const AdminPage: React.FC = () => {
     },
   });
 
+  const metricCards = metricsLoading ? Array.from({ length: 6 }, () => null) : metrics ?? [];
+  const mainAsideGrid = 'grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]';
+
   const systemStats = useMemo(() => {
     if (!systemOverview) return null;
     return [
@@ -274,19 +278,20 @@ const AdminPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Admin Console</h1>
-          <p className="text-muted-foreground">Control centre for teams, treasury and security of the COIN ecosystem</p>
-        </div>
-        <div className="flex items-center gap-2">
-          {usersRefreshing && <Badge variant="secondary">Syncing data…</Badge>}
-          <Badge variant="secondary">ADMIN</Badge>
-        </div>
-      </div>
+      <PageHeader
+        title="Admin Console"
+        description="Control centre for teams, treasury and security of the COIN ecosystem"
+        actions={
+          <>
+            {usersRefreshing ? <Badge variant="secondary">Syncing data…</Badge> : null}
+            <Badge variant="secondary">ADMIN</Badge>
+          </>
+        }
+        titleSectionClassName="space-y-2"
+      />
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {(metricsLoading ? Array.from({ length: 6 }) : metrics)?.map((metric, index) => (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {metricCards.map((metric, index) => (
           <Card key={metric?.id ?? index}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardDescription className="flex items-center gap-2 text-xs uppercase tracking-wide">
@@ -323,7 +328,7 @@ const AdminPage: React.FC = () => {
         ))}
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.8fr_1fr]">
+      <div className={mainAsideGrid}>
         <Card>
           <CardHeader className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
@@ -347,7 +352,7 @@ const AdminPage: React.FC = () => {
               </div>
             ) : (
               <>
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   <div>
                     <p className="text-xs uppercase text-muted-foreground">Total value</p>
                     <p className="text-2xl font-semibold">{formatCurrency(treasury.totalValueUsd)}</p>
@@ -384,7 +389,7 @@ const AdminPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
+                <div className={mainAsideGrid}>
                   <div className="space-y-4">
                     {treasury.assets.map(asset => (
                       <div key={asset.asset} className="rounded-md border p-4">
@@ -489,7 +494,7 @@ const AdminPage: React.FC = () => {
         </Card>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
+      <div className={mainAsideGrid}>
         <Card>
           <CardHeader>
             <CardTitle className="text-xl">Liquidity pools</CardTitle>
@@ -609,7 +614,7 @@ const AdminPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
+      <div className={mainAsideGrid}>
         <Card>
           <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -738,7 +743,7 @@ const AdminPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+      <div className={mainAsideGrid}>
         <Card>
           <CardHeader className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
             <div>
@@ -812,7 +817,7 @@ const AdminPage: React.FC = () => {
         </Card>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
+      <div className={mainAsideGrid}>
         <Card>
           <CardHeader>
             <CardTitle className="text-xl">Service status</CardTitle>

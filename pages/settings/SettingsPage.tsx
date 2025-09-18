@@ -1,5 +1,6 @@
 
 import React from 'react';
+import PageHeader from '../../components/layout/PageHeader';
 import { useSettingsStore } from '../../store/settingsStore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Label } from '../../components/ui/Label';
@@ -10,12 +11,11 @@ const SettingsPage: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <div className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground">
-            Manage your account and application preferences.
-        </p>
-      </div>
+      <PageHeader
+        title="Settings"
+        description="Manage your account and application preferences."
+        className="max-w-2xl"
+      />
       <Card>
         <CardHeader>
           <CardTitle>Appearance</CardTitle>

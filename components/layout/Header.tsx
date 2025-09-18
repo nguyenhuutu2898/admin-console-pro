@@ -21,7 +21,7 @@ const Header: React.FC<HeaderProps> = ({ setSidebarOpen }) => {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background px-4 sm:px-6">
+    <header className="sticky top-0 z-30 flex min-h-16 items-center justify-between border-b bg-background px-6 lg:px-8">
       <div className="lg:hidden">
         <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)}>
           <Menu className="h-6 w-6" />

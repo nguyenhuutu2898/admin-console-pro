@@ -107,6 +107,8 @@ const AdminOverviewPage: React.FC = () => {
     return auditLogs.slice(0, 5);
   }, [auditLogs]);
 
+  const mainAsideGrid = 'grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]';
+
   return (
     <div className="space-y-6">
       <section>
@@ -132,7 +134,7 @@ const AdminOverviewPage: React.FC = () => {
         </div>
       </section>
 
-      <div className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
+      <div className={mainAsideGrid}>
         <Card>
           <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="space-y-1">
@@ -223,7 +225,7 @@ const AdminOverviewPage: React.FC = () => {
         </Card>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.6fr_1fr]">
+      <div className={mainAsideGrid}>
         <Card>
           <CardHeader>
             <CardTitle className="text-xl">Service status</CardTitle>

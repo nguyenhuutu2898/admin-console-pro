@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 // FIX: import keepPreviousData for TanStack Query v5
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import PageHeader from "../../components/layout/PageHeader";
 import { ordersApi } from "../../services/api";
 // FIX: import PaginatedResponse type
 import { Order, PaginatedResponse } from "../../types";
@@ -65,64 +66,52 @@ const OrdersPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <h1 className="text-3xl font-bold tracking-tight">Orders</h1>
-        <div className="flex flex-wrap items-center gap-2 md:justify-end">
-          <Input
-            placeholder="Search orders..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full md:w-64"
-          />
-          <Select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            containerClassName="w-full md:w-40"
-          >
-            <option value="">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="processing">Processing</option>
-            <option value="shipped">Shipped</option>
-            <option value="delivered">Delivered</option>
-            <option value="cancelled">Cancelled</option>
-          </Select>
-          <Input
-            type="date"
-            value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
-            className="w-full md:w-40"
-          />
-          <Input
-            type="date"
-            value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
-            className="w-full md:w-40"
-          />
-          <Button
-            className="w-full md:w-auto"
-            onClick={() => {
-              setPage(1);
-              setApplied({ q: debouncedSearchTerm, status: statusFilter, from: fromDate, to: toDate });
-            }}
-          >
-            Apply
-          </Button>
-          <Button
-            variant="outline"
-            className="w-full md:w-auto"
-            onClick={() => {
-              setSearchTerm("");
-              setStatusFilter("");
-              setFromDate("");
-              setToDate("");
-              setPage(1);
-              setApplied({ q: "", status: "", from: "", to: "" });
-            }}
-          >
-            Reset
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Orders"
+        actions={
+          <>
+            <Input
+              placeholder="Search orders..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full md:w-64"
+            />
+            <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} containerClassName="w-full md:w-40">
+              <option value="">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="processing">Processing</option>
+              <option value="shipped">Shipped</option>
+              <option value="delivered">Delivered</option>
+              <option value="cancelled">Cancelled</option>
+            </Select>
+            <Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="w-full md:w-40" />
+            <Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="w-full md:w-40" />
+            <Button
+              className="w-full md:w-auto"
+              onClick={() => {
+                setPage(1);
+                setApplied({ q: debouncedSearchTerm, status: statusFilter, from: fromDate, to: toDate });
+              }}
+            >
+              Apply
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full md:w-auto"
+              onClick={() => {
+                setSearchTerm("");
+                setStatusFilter("");
+                setFromDate("");
+                setToDate("");
+                setPage(1);
+                setApplied({ q: "", status: "", from: "", to: "" });
+              }}
+            >
+              Reset
+            </Button>
+          </>
+        }
+      />
 
       <Card>
         <div className="overflow-x-auto">

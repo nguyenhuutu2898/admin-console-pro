@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { useIsFetching } from '@tanstack/react-query';
 
+import PageHeader from '../../components/layout/PageHeader';
 import { Badge } from '../../components/ui/Badge';
 import { useAuthStore } from '../../store/authStore';
 import { cn } from '../../lib/utils';
@@ -19,18 +20,17 @@ const AdminLayout: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Admin Console</h1>
-          <p className="text-muted-foreground">
-            Control centre for teams, infrastructure and security.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {isFetching && <Badge variant="secondary">Syncing data…</Badge>}
-          {user && <Badge variant="secondary">{user.role}</Badge>}
-        </div>
-      </div>
+      <PageHeader
+        title="Admin Console"
+        description="Control centre for teams, infrastructure and security."
+        actions={
+          <>
+            {isFetching ? <Badge variant="secondary">Syncing data…</Badge> : null}
+            {user ? <Badge variant="secondary">{user.role}</Badge> : null}
+          </>
+        }
+        titleSectionClassName="space-y-2"
+      />
 
       <nav className="flex flex-wrap gap-2">
         {tabs.map(tab => (
