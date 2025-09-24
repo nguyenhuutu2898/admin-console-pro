@@ -1,5 +1,5 @@
 
-import { UserRole, type Order, type Product, type Customer, type User, type PaginatedResponse } from '../types';
+import { UserRole, type Order, type Product, type Customer, type User, type PaginatedResponse, type Branch, type Kiosk, type Advertisement, type TransactionType } from '../types';
 import { toast } from 'sonner';
 
 // --- DATA LOADING FROM PUBLIC JSON ---
@@ -7,9 +7,187 @@ let cachedProducts: Product[] | null = null;
 let cachedOrders: Order[] | null = null;
 let cachedCustomers: Customer[] | null = null;
 const users: User[] = [
-  { id: '1', name: 'Admin User', email: 'admin@gmail.com', role: UserRole.ADMIN, avatarUrl: 'https://i.pravatar.cc/150?u=admin' },
-  { id: '2', name: 'Staff User', email: 'staff@gmail.com', role: UserRole.STAFF, avatarUrl: 'https://i.pravatar.cc/150?u=staff' },
-  { id: '3', name: 'Viewer User', email: 'viewer@gmail.com', role: UserRole.VIEWER, avatarUrl: 'https://i.pravatar.cc/150?u=viewer' },
+  { 
+    id: '1', 
+    name: 'John Smith', 
+    email: 'admin@gmail.com', 
+    role: UserRole.ADMIN, 
+    avatarUrl: 'https://i.pravatar.cc/150?u=admin',
+    branch: 'Ho Chi Minh City Branch',
+    address: '123 Main Street, District 1, Ho Chi Minh City',
+    updateTime: '05/05/2022',
+    updateHour: '17:20'
+  },
+  { 
+    id: '2', 
+    name: 'Jane Doe', 
+    email: 'blahblah@gmail.com', 
+    role: UserRole.STAFF, 
+    avatarUrl: 'https://i.pravatar.cc/150?u=staff',
+    branch: 'Ho Chi Minh City Branch',
+    address: '123 Main Street, District 1, Ho Chi Minh City',
+    updateTime: '26/05/2022',
+    updateHour: '11:12'
+  },
+  { 
+    id: '3', 
+    name: 'Mike Johnson', 
+    email: 'counter1@gmail.com', 
+    role: UserRole.STAFF, 
+    avatarUrl: 'https://i.pravatar.cc/150?u=viewer',
+    branch: 'Ho Chi Minh City Branch',
+    address: '123 Main Street, District 1, Ho Chi Minh City',
+    updateTime: '18/05/2022',
+    updateHour: '18:51'
+  },
+  { 
+    id: '4', 
+    name: 'Sarah Wilson', 
+    email: 'counter1234@gmail.com', 
+    role: UserRole.STAFF, 
+    avatarUrl: 'https://i.pravatar.cc/150?u=viewer',
+    updateTime: '27/04/2022',
+    updateHour: '11:40'
+  },
+  { 
+    id: '5', 
+    name: 'David Brown', 
+    email: 'counter4321@gmail.com', 
+    role: UserRole.STAFF, 
+    avatarUrl: 'https://i.pravatar.cc/150?u=viewer',
+    updateTime: '27/04/2022',
+    updateHour: '11:42'
+  },
+  { 
+    id: '6', 
+    name: 'Lisa Davis', 
+    email: 'duytran@gmail.com', 
+    role: UserRole.ADMIN, 
+    avatarUrl: 'https://i.pravatar.cc/150?u=viewer',
+    branch: 'Ho Chi Minh City Branch',
+    address: '123 Main Street, District 1, Ho Chi Minh City',
+    updateTime: '19/05/2022',
+    updateHour: '14:00'
+  },
+];
+
+// Mock data for new entities
+const branches: Branch[] = [
+  {
+    id: '1',
+    name: 'Ho Chi Minh City Branch',
+    address: '123 Main Street, District 1, Ho Chi Minh City',
+    phone: '+84 28 1234 5678',
+    email: 'hcmc@company.com',
+    managerId: '1',
+    managerName: 'John Smith',
+    isActive: true,
+    createdAt: '2024-01-01',
+    updatedAt: '2024-01-01'
+  },
+  {
+    id: '2',
+    name: 'Hanoi Branch',
+    address: '456 Ba Dinh Square, Hanoi',
+    phone: '+84 24 8765 4321',
+    email: 'hanoi@company.com',
+    managerId: '6',
+    managerName: 'Lisa Davis',
+    isActive: true,
+    createdAt: '2024-01-02',
+    updatedAt: '2024-01-02'
+  }
+];
+
+const kiosks: Kiosk[] = [
+  {
+    id: '1',
+    name: 'Kiosk HCMC-001',
+    branchId: '1',
+    branchName: 'Ho Chi Minh City Branch',
+    deviceId: 'DEV001',
+    devicePassword: 'pass123',
+    status: 'online',
+    location: 'Lobby - Floor 1',
+    lastConnected: '2024-01-15 10:30:00',
+    isActive: true,
+    createdAt: '2024-01-01',
+    updatedAt: '2024-01-15'
+  },
+  {
+    id: '2',
+    name: 'Kiosk HCMC-002',
+    branchId: '1',
+    branchName: 'Ho Chi Minh City Branch',
+    deviceId: 'DEV002',
+    devicePassword: 'pass456',
+    status: 'offline',
+    location: 'Lobby - Floor 2',
+    isActive: true,
+    createdAt: '2024-01-02',
+    updatedAt: '2024-01-10'
+  }
+];
+
+const advertisements: Advertisement[] = [
+  {
+    id: '1',
+    title: 'Welcome to Our Bank',
+    description: 'Promotional video showcasing our services',
+    type: 'video',
+    contentUrl: '/ads/welcome-video.mp4',
+    thumbnailUrl: '/ads/welcome-thumb.jpg',
+    duration: 30,
+    isActive: true,
+    startDate: '2024-01-01',
+    endDate: '2024-12-31',
+    targetBranches: ['1', '2'],
+    createdAt: '2024-01-01',
+    updatedAt: '2024-01-01'
+  },
+  {
+    id: '2',
+    title: 'New Loan Products',
+    description: 'Image banner for new loan products',
+    type: 'image',
+    contentUrl: '/ads/loan-products.jpg',
+    isActive: true,
+    startDate: '2024-01-15',
+    endDate: '2024-03-15',
+    targetBranches: ['1'],
+    createdAt: '2024-01-15',
+    updatedAt: '2024-01-15'
+  }
+];
+
+const transactionTypes: TransactionType[] = [
+  {
+    id: '1',
+    name: 'Cash Withdrawal',
+    code: 'CASH_WITHDRAWAL',
+    description: 'Cash withdrawal from ATM or counter',
+    isActive: true,
+    createdAt: '2024-01-01',
+    updatedAt: '2024-01-01'
+  },
+  {
+    id: '2',
+    name: 'Balance Inquiry',
+    code: 'BALANCE_INQUIRY',
+    description: 'Check account balance',
+    isActive: true,
+    createdAt: '2024-01-01',
+    updatedAt: '2024-01-01'
+  },
+  {
+    id: '3',
+    name: 'Transfer',
+    code: 'TRANSFER',
+    description: 'Transfer money between accounts',
+    isActive: true,
+    createdAt: '2024-01-01',
+    updatedAt: '2024-01-01'
+  }
 ];
 
 async function loadProducts(): Promise<Product[]> {
@@ -171,5 +349,366 @@ export const customersApi = {
     const total = filteredCustomers.length;
     const data = filteredCustomers.slice((page - 1) * limit, page * limit);
     return { data, total, page, limit };
+  },
+};
+
+// --- Users Service ---
+export const usersApi = {
+  getUsers: async ({ page = 1, limit = 10, q = '', role = '' }: { page?: number; limit?: number; q?: string; role?: string; }): Promise<PaginatedResponse<User>> => {
+    await sleep(600);
+    let filteredUsers = [...users];
+
+    if (q) {
+      filteredUsers = filteredUsers.filter(u =>
+        u.name.toLowerCase().includes(q.toLowerCase()) ||
+        u.email.toLowerCase().includes(q.toLowerCase())
+      );
+    }
+    if (role) {
+      filteredUsers = filteredUsers.filter(u => u.role === role);
+    }
+    
+    const total = filteredUsers.length;
+    const data = filteredUsers.slice((page - 1) * limit, page * limit);
+    return { data, total, page, limit };
+  },
+  
+  createUser: async (userData: Omit<User, 'id'>): Promise<User> => {
+    await sleep(500);
+    const newUser: User = {
+      id: `USER-${Date.now()}`,
+      ...userData,
+    };
+    users.push(newUser);
+    toast.success("User created successfully!");
+    return newUser;
+  },
+  
+  updateUser: async (userData: User): Promise<User> => {
+    await sleep(500);
+    const index = users.findIndex(u => u.id === userData.id);
+    if (index !== -1) {
+      users[index] = userData;
+      toast.success("User updated successfully!");
+      return users[index];
+    }
+    toast.error("User not found.");
+    throw new Error('User not found');
+  },
+  
+  deleteUser: async (userId: string): Promise<void> => {
+    await sleep(500);
+    const index = users.findIndex(u => u.id === userId);
+    if (index !== -1) {
+      users.splice(index, 1);
+      toast.success("User deleted successfully!");
+    } else {
+      toast.error("User not found.");
+      throw new Error('User not found');
+    }
+  },
+  
+  assignPassword: async (userId: string): Promise<{ password: string }> => {
+    await sleep(500);
+    const user = users.find(u => u.id === userId);
+    if (user) {
+      const newPassword = Math.random().toString(36).substring(2, 10);
+      user.password = newPassword;
+      toast.success("Password assigned successfully!");
+      return { password: newPassword };
+    }
+    toast.error("User not found.");
+    throw new Error('User not found');
+  },
+  
+  resetPassword: async (userId: string): Promise<{ password: string }> => {
+    await sleep(500);
+    const user = users.find(u => u.id === userId);
+    if (user) {
+      const newPassword = Math.random().toString(36).substring(2, 10);
+      user.password = newPassword;
+      toast.success("Password reset successfully!");
+      return { password: newPassword };
+    }
+    toast.error("User not found.");
+    throw new Error('User not found');
+  },
+};
+
+// --- Branches Service ---
+export const branchesApi = {
+  getBranches: async ({ page = 1, limit = 10, q = '', status = '' }: { page?: number; limit?: number; q?: string; status?: string; }): Promise<PaginatedResponse<Branch>> => {
+    await sleep(600);
+    let filteredBranches = [...branches];
+
+    if (q) {
+      filteredBranches = filteredBranches.filter(b =>
+        b.name.toLowerCase().includes(q.toLowerCase()) ||
+        b.address.toLowerCase().includes(q.toLowerCase()) ||
+        (b.managerName && b.managerName.toLowerCase().includes(q.toLowerCase()))
+      );
+    }
+    if (status) {
+      filteredBranches = filteredBranches.filter(b => {
+        if (status === 'active') return b.isActive;
+        if (status === 'inactive') return !b.isActive;
+        return true;
+      });
+    }
+    
+    const total = filteredBranches.length;
+    const data = filteredBranches.slice((page - 1) * limit, page * limit);
+    return { data, total, page, limit };
+  },
+  
+  createBranch: async (branchData: Omit<Branch, 'id' | 'createdAt' | 'updatedAt'>): Promise<Branch> => {
+    await sleep(500);
+    const newBranch: Branch = {
+      id: `BRANCH-${Date.now()}`,
+      ...branchData,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    branches.push(newBranch);
+    toast.success("Branch created successfully!");
+    return newBranch;
+  },
+  
+  updateBranch: async (branchData: Branch): Promise<Branch> => {
+    await sleep(500);
+    const index = branches.findIndex(b => b.id === branchData.id);
+    if (index !== -1) {
+      branches[index] = { ...branchData, updatedAt: new Date().toISOString() };
+      toast.success("Branch updated successfully!");
+      return branches[index];
+    }
+    toast.error("Branch not found.");
+    throw new Error('Branch not found');
+  },
+  
+  deleteBranch: async (branchId: string): Promise<void> => {
+    await sleep(500);
+    const index = branches.findIndex(b => b.id === branchId);
+    if (index !== -1) {
+      branches.splice(index, 1);
+      toast.success("Branch deleted successfully!");
+    } else {
+      toast.error("Branch not found.");
+      throw new Error('Branch not found');
+    }
+  },
+};
+
+// --- Kiosks Service ---
+export const kiosksApi = {
+  getKiosks: async ({ page = 1, limit = 10, q = '', status = '', branchId = '' }: { page?: number; limit?: number; q?: string; status?: string; branchId?: string; }): Promise<PaginatedResponse<Kiosk>> => {
+    await sleep(600);
+    let filteredKiosks = [...kiosks];
+
+    if (q) {
+      filteredKiosks = filteredKiosks.filter(k =>
+        k.name.toLowerCase().includes(q.toLowerCase()) ||
+        k.branchName.toLowerCase().includes(q.toLowerCase()) ||
+        k.deviceId.toLowerCase().includes(q.toLowerCase())
+      );
+    }
+    if (status) {
+      filteredKiosks = filteredKiosks.filter(k => k.status === status);
+    }
+    if (branchId) {
+      filteredKiosks = filteredKiosks.filter(k => k.branchId === branchId);
+    }
+    
+    const total = filteredKiosks.length;
+    const data = filteredKiosks.slice((page - 1) * limit, page * limit);
+    return { data, total, page, limit };
+  },
+  
+  createKiosk: async (kioskData: Omit<Kiosk, 'id' | 'createdAt' | 'updatedAt'>): Promise<Kiosk> => {
+    await sleep(500);
+    const newKiosk: Kiosk = {
+      id: `KIOSK-${Date.now()}`,
+      ...kioskData,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    kiosks.push(newKiosk);
+    toast.success("Kiosk created successfully!");
+    return newKiosk;
+  },
+  
+  updateKiosk: async (kioskData: Kiosk): Promise<Kiosk> => {
+    await sleep(500);
+    const index = kiosks.findIndex(k => k.id === kioskData.id);
+    if (index !== -1) {
+      kiosks[index] = { ...kioskData, updatedAt: new Date().toISOString() };
+      toast.success("Kiosk updated successfully!");
+      return kiosks[index];
+    }
+    toast.error("Kiosk not found.");
+    throw new Error('Kiosk not found');
+  },
+  
+  deleteKiosk: async (kioskId: string): Promise<void> => {
+    await sleep(500);
+    const index = kiosks.findIndex(k => k.id === kioskId);
+    if (index !== -1) {
+      kiosks.splice(index, 1);
+      toast.success("Kiosk deleted successfully!");
+    } else {
+      toast.error("Kiosk not found.");
+      throw new Error('Kiosk not found');
+    }
+  },
+  
+  connectKiosk: async (kioskId: string): Promise<{ deviceId: string; devicePassword: string }> => {
+    await sleep(500);
+    const kiosk = kiosks.find(k => k.id === kioskId);
+    if (kiosk) {
+      // Generate new credentials
+      const newDeviceId = `DEV${Date.now()}`;
+      const newPassword = Math.random().toString(36).substring(2, 10);
+      
+      kiosk.deviceId = newDeviceId;
+      kiosk.devicePassword = newPassword;
+      kiosk.status = 'online';
+      kiosk.lastConnected = new Date().toISOString();
+      kiosk.updatedAt = new Date().toISOString();
+      
+      toast.success("Kiosk connected successfully!");
+      return { deviceId: newDeviceId, devicePassword: newPassword };
+    }
+    toast.error("Kiosk not found.");
+    throw new Error('Kiosk not found');
+  },
+};
+
+// --- Advertisements Service ---
+export const advertisementsApi = {
+  getAdvertisements: async ({ page = 1, limit = 10, q = '', type = '', status = '' }: { page?: number; limit?: number; q?: string; type?: string; status?: string; }): Promise<PaginatedResponse<Advertisement>> => {
+    await sleep(600);
+    let filteredAdvertisements = [...advertisements];
+
+    if (q) {
+      filteredAdvertisements = filteredAdvertisements.filter(a =>
+        a.title.toLowerCase().includes(q.toLowerCase()) ||
+        (a.description && a.description.toLowerCase().includes(q.toLowerCase()))
+      );
+    }
+    if (type) {
+      filteredAdvertisements = filteredAdvertisements.filter(a => a.type === type);
+    }
+    if (status) {
+      filteredAdvertisements = filteredAdvertisements.filter(a => {
+        if (status === 'active') return a.isActive;
+        if (status === 'inactive') return !a.isActive;
+        return true;
+      });
+    }
+    
+    const total = filteredAdvertisements.length;
+    const data = filteredAdvertisements.slice((page - 1) * limit, page * limit);
+    return { data, total, page, limit };
+  },
+  
+  createAdvertisement: async (advertisementData: Omit<Advertisement, 'id' | 'createdAt' | 'updatedAt'>): Promise<Advertisement> => {
+    await sleep(500);
+    const newAdvertisement: Advertisement = {
+      id: `AD-${Date.now()}`,
+      ...advertisementData,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    advertisements.push(newAdvertisement);
+    toast.success("Advertisement created successfully!");
+    return newAdvertisement;
+  },
+  
+  updateAdvertisement: async (advertisementData: Advertisement): Promise<Advertisement> => {
+    await sleep(500);
+    const index = advertisements.findIndex(a => a.id === advertisementData.id);
+    if (index !== -1) {
+      advertisements[index] = { ...advertisementData, updatedAt: new Date().toISOString() };
+      toast.success("Advertisement updated successfully!");
+      return advertisements[index];
+    }
+    toast.error("Advertisement not found.");
+    throw new Error('Advertisement not found');
+  },
+  
+  deleteAdvertisement: async (advertisementId: string): Promise<void> => {
+    await sleep(500);
+    const index = advertisements.findIndex(a => a.id === advertisementId);
+    if (index !== -1) {
+      advertisements.splice(index, 1);
+      toast.success("Advertisement deleted successfully!");
+    } else {
+      toast.error("Advertisement not found.");
+      throw new Error('Advertisement not found');
+    }
+  },
+};
+
+// --- Transaction Types Service ---
+export const transactionTypesApi = {
+  getTransactionTypes: async ({ page = 1, limit = 10, q = '', status = '' }: { page?: number; limit?: number; q?: string; status?: string; }): Promise<PaginatedResponse<TransactionType>> => {
+    await sleep(600);
+    let filteredTransactionTypes = [...transactionTypes];
+
+    if (q) {
+      filteredTransactionTypes = filteredTransactionTypes.filter(tt =>
+        tt.name.toLowerCase().includes(q.toLowerCase()) ||
+        tt.code.toLowerCase().includes(q.toLowerCase()) ||
+        (tt.description && tt.description.toLowerCase().includes(q.toLowerCase()))
+      );
+    }
+    if (status) {
+      filteredTransactionTypes = filteredTransactionTypes.filter(tt => {
+        if (status === 'active') return tt.isActive;
+        if (status === 'inactive') return !tt.isActive;
+        return true;
+      });
+    }
+    
+    const total = filteredTransactionTypes.length;
+    const data = filteredTransactionTypes.slice((page - 1) * limit, page * limit);
+    return { data, total, page, limit };
+  },
+  
+  createTransactionType: async (transactionTypeData: Omit<TransactionType, 'id' | 'createdAt' | 'updatedAt'>): Promise<TransactionType> => {
+    await sleep(500);
+    const newTransactionType: TransactionType = {
+      id: `TT-${Date.now()}`,
+      ...transactionTypeData,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    transactionTypes.push(newTransactionType);
+    toast.success("Transaction type created successfully!");
+    return newTransactionType;
+  },
+  
+  updateTransactionType: async (transactionTypeData: TransactionType): Promise<TransactionType> => {
+    await sleep(500);
+    const index = transactionTypes.findIndex(tt => tt.id === transactionTypeData.id);
+    if (index !== -1) {
+      transactionTypes[index] = { ...transactionTypeData, updatedAt: new Date().toISOString() };
+      toast.success("Transaction type updated successfully!");
+      return transactionTypes[index];
+    }
+    toast.error("Transaction type not found.");
+    throw new Error('Transaction type not found');
+  },
+  
+  deleteTransactionType: async (transactionTypeId: string): Promise<void> => {
+    await sleep(500);
+    const index = transactionTypes.findIndex(tt => tt.id === transactionTypeId);
+    if (index !== -1) {
+      transactionTypes.splice(index, 1);
+      toast.success("Transaction type deleted successfully!");
+    } else {
+      toast.error("Transaction type not found.");
+      throw new Error('Transaction type not found');
+    }
   },
 };

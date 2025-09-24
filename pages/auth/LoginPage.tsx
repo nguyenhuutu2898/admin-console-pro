@@ -51,8 +51,8 @@ const LoginPage: React.FC = () => {
             <div className="mx-auto mb-2">
                 <Package className="h-8 w-8 text-primary"/>
             </div>
-          <CardTitle className="text-2xl">Login to Admin Console</CardTitle>
-          <CardDescription>Enter your email and password below to login</CardDescription>
+          <CardTitle className="text-2xl">Login to Portal Admin</CardTitle>
+          <CardDescription>Enter your email and password to login</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>

@@ -17,10 +17,10 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { MoreHorizontal } from '../../components/Icons';
 
 const productSchema = z.object({
-  name: z.string().min(3, 'Name must be at least 3 characters'),
-  price: z.coerce.number().min(0, 'Price must be a positive number'),
-  stock: z.coerce.number().int().min(0, 'Stock must be a non-negative integer'),
-  category: z.string().min(2, 'Category is required'),
+  name: z.string().min(3, 'Tên sản phẩm phải có ít nhất 3 ký tự'),
+  price: z.coerce.number().min(0, 'Giá phải là số dương'),
+  stock: z.coerce.number().int().min(0, 'Số lượng tồn kho phải là số nguyên không âm'),
+  category: z.string().min(2, 'Danh mục là bắt buộc'),
 });
 type ProductFormValues = z.infer<typeof productSchema>;
 

@@ -56,14 +56,14 @@ const CustomersPage: React.FC = () => {
           />
           <Input
             type="number"
-            placeholder="Min spent"
+              placeholder="Min spent"
             value={minSpent}
             onChange={(e) => setMinSpent(e.target.value)}
             className="w-28"
           />
           <Input
             type="number"
-            placeholder="Max spent"
+              placeholder="Max spent"
             value={maxSpent}
             onChange={(e) => setMaxSpent(e.target.value)}
             className="w-28"
@@ -83,19 +83,19 @@ const CustomersPage: React.FC = () => {
               setPage(1);
               setApplied({ q: debouncedSearchTerm, min: minSpent, max: maxSpent, from: fromJoinDate, to: toJoinDate });
             }}
-          >Apply</Button>
-          <Button
-            variant="outline"
-            onClick={() => {
-              setSearchTerm('');
-              setMinSpent('');
-              setMaxSpent('');
-              setFromJoinDate('');
-              setToJoinDate('');
-              setPage(1);
-              setApplied({ q: '', min: '', max: '', from: '', to: '' });
-            }}
-          >Reset</Button>
+            >Apply</Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSearchTerm('');
+                setMinSpent('');
+                setMaxSpent('');
+                setFromJoinDate('');
+                setToJoinDate('');
+                setPage(1);
+                setApplied({ q: '', min: '', max: '', from: '', to: '' });
+              }}
+            >Reset</Button>
         </div>
       </div>
 
@@ -103,11 +103,11 @@ const CustomersPage: React.FC = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead>Join Date</TableHead>
-              <TableHead className="text-right">Total Spent</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Join Date</TableHead>
+                <TableHead className="text-right">Total Spent</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -132,7 +132,7 @@ const CustomersPage: React.FC = () => {
                   <TableCell>{customer.email}</TableCell>
                   <TableCell>{customer.phone}</TableCell>
                   <TableCell>{customer.joinDate}</TableCell>
-                  <TableCell className="text-right">${customer.totalSpent.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">${customer.totalSpent.toFixed(2)}</TableCell>
                 </TableRow>
               ))
             )}
@@ -142,7 +142,7 @@ const CustomersPage: React.FC = () => {
       
       <div className="flex items-center justify-between">
         <div className="text-sm text-muted-foreground">
-          Showing page {data?.page ?? 0} of {totalPages}
+            Showing page {data?.page ?? 0} of {totalPages}
         </div>
         <div className="flex items-center gap-2">
           <Button

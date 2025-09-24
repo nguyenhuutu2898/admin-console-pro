@@ -16,6 +16,11 @@ import AnalyticsPage from './pages/analytics/AnalyticsPage';
 import SettingsPage from './pages/settings/SettingsPage';
 import { useSettingsStore } from './store/settingsStore';
 import AdminPage from './pages/admin/AdminPage';
+import UsersPage from './pages/users/UsersPage';
+import BranchesPage from './pages/branches/BranchesPage';
+import KiosksPage from './pages/kiosks/KiosksPage';
+import AdvertisementsPage from './pages/advertisements/AdvertisementsPage';
+import TransactionTypesPage from './pages/transaction-types/TransactionTypesPage';
 
 const queryClient = new QueryClient();
 
@@ -43,10 +48,11 @@ function App() {
           >
             <Route index element={<DashboardPage />} />
             <Route path="dashboard" element={<DashboardPage />} />
-            <Route path="orders" element={<OrdersPage />} />
-            <Route path="products" element={<ProductsPage />} />
-            <Route path="customers" element={<CustomersPage />} />
-            <Route path="analytics" element={<AnalyticsPage />} />
+            <Route path="branches" element={<BranchesPage />} />
+            <Route path="users" element={<UsersPage />} />
+            <Route path="kiosks" element={<KiosksPage />} />
+            <Route path="advertisements" element={<AdvertisementsPage />} />
+            <Route path="transaction-types" element={<TransactionTypesPage />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="admin" element={<AdminPage />} />
           </Route>

@@ -11,6 +11,66 @@ export interface User {
   email: string;
   role: UserRole;
   avatarUrl?: string;
+  branch?: string;
+  address?: string;
+  updateTime?: string;
+  updateHour?: string;
+  password?: string;
+  isActive?: boolean;
+}
+
+export interface Branch {
+  id: string;
+  name: string;
+  address: string;
+  phone?: string;
+  email?: string;
+  managerId?: string;
+  managerName?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Kiosk {
+  id: string;
+  name: string;
+  branchId: string;
+  branchName: string;
+  deviceId: string;
+  devicePassword: string;
+  status: 'online' | 'offline' | 'maintenance';
+  location: string;
+  lastConnected?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Advertisement {
+  id: string;
+  title: string;
+  description?: string;
+  type: 'image' | 'video';
+  contentUrl: string;
+  thumbnailUrl?: string;
+  duration?: number; // in seconds for videos
+  isActive: boolean;
+  startDate: string;
+  endDate: string;
+  targetBranches: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TransactionType {
+  id: string;
+  name: string;
+  code: string;
+  description?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Order {

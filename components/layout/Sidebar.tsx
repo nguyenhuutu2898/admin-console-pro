@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, ShoppingCart, Package, Users, LineChart, Settings, ChevronLeft, Shield } from '../Icons';
+import { Home, ShoppingCart, Package, Users, LineChart, Settings, ChevronLeft, Shield, Search, UserCheck, ArrowLeftRight, Sparkles, Circle, Building, Monitor, Image, Play, Receipt } from '../Icons';
 import { cn } from '../../lib/utils';
 import { useAuthStore } from '../../store/authStore';
 import { type NavItem, UserRole } from '../../types';
@@ -9,11 +9,11 @@ import { Button } from '../ui/Button';
 
 const navItems: NavItem[] = [
   { title: 'Dashboard', href: '/dashboard', icon: Home, roles: [UserRole.ADMIN, UserRole.STAFF, UserRole.VIEWER] },
-  { title: 'Orders', href: '/orders', icon: ShoppingCart, roles: [UserRole.ADMIN, UserRole.STAFF] },
-  { title: 'Products', href: '/products', icon: Package, roles: [UserRole.ADMIN, UserRole.STAFF] },
-  { title: 'Customers', href: '/customers', icon: Users, roles: [UserRole.ADMIN, UserRole.STAFF] },
-  { title: 'Analytics', href: '/analytics', icon: LineChart, roles: [UserRole.ADMIN] },
-  { title: 'Admin', href: '/admin', icon: Shield, roles: [UserRole.ADMIN] },
+  { title: 'Branch Management', href: '/branches', icon: Building, roles: [UserRole.ADMIN, UserRole.STAFF] },
+  { title: 'User Management', href: '/users', icon: Users, roles: [UserRole.ADMIN, UserRole.STAFF] },
+  { title: 'Kiosk Management', href: '/kiosks', icon: Monitor, roles: [UserRole.ADMIN, UserRole.STAFF] },
+  { title: 'Advertisement Management', href: '/advertisements', icon: Image, roles: [UserRole.ADMIN, UserRole.STAFF] },
+  { title: 'Transaction Types', href: '/transaction-types', icon: Receipt, roles: [UserRole.ADMIN, UserRole.STAFF] },
   { title: 'Settings', href: '/settings', icon: Settings, roles: [UserRole.ADMIN, UserRole.STAFF, UserRole.VIEWER] },
 ];
 
@@ -39,19 +39,21 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex h-full flex-col border-r bg-background transition-all duration-300 ease-in-out lg:static lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 flex h-full flex-col bg-red-800 transition-all duration-300 ease-in-out lg:static lg:translate-x-0",
           sidebarOpen ? 'translate-x-0' : '-translate-x-full',
           isCollapsed ? 'w-20' : 'w-64'
         )}
       >
-        <div className="flex h-16 items-center justify-between border-b px-6">
+        <div className="flex h-16 items-center justify-center border-b border-red-700 px-6">
           <NavLink to="/" className="flex items-center gap-2 font-semibold">
-            <Package className="h-6 w-6" />
-            {!isCollapsed && <span className="">Admin Pro</span>}
+            <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
+              <div className="w-6 h-6 bg-red-800 rounded-sm"></div>
+            </div>
+            {!isCollapsed && <span className="text-white font-bold">Portal Admin</span>}
           </NavLink>
         </div>
 
-        <nav className="flex-1 space-y-2 overflow-y-auto px-4 py-4">
+        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
           {navItems.filter(item => userHasRole(item.roles)).map((item) => {
             const isActive = location.pathname === item.href || (item.href !== '/dashboard' && location.pathname.startsWith(item.href));
             return (
@@ -60,20 +62,25 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
                 to={item.href}
                 onClick={() => setSidebarOpen(false)}
                 className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary',
-                  isActive && 'bg-muted text-primary',
-                  isCollapsed && 'justify-center'
+                  'flex items-center gap-3 rounded-lg px-3 py-3 text-white/80 transition-all hover:text-white hover:bg-red-700/50',
+                  isActive && 'bg-red-700 text-white',
+                  isCollapsed && 'justify-center px-2'
                 )}
               >
                 <item.icon className="h-5 w-5" />
-                {!isCollapsed && <span className="truncate">{item.title}</span>}
+                {!isCollapsed && <span className="truncate font-medium">{item.title}</span>}
               </NavLink>
             );
           })}
         </nav>
 
-        <div className="mt-auto hidden border-t p-4 lg:block">
-            <Button variant="ghost" size="icon" onClick={() => setIsCollapsed(!isCollapsed)} className="rounded-full w-full justify-start px-3">
+        <div className="mt-auto hidden border-t border-red-700 p-4 lg:block">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setIsCollapsed(!isCollapsed)} 
+              className="rounded-full w-full justify-start px-3 text-white hover:bg-red-700/50"
+            >
                 <ChevronLeft className={cn("h-5 w-5 transition-transform", isCollapsed && "rotate-180")}/>
                 {!isCollapsed && <span className="ml-3">Collapse</span>}
             </Button>
