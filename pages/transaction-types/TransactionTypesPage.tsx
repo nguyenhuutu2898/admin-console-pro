@@ -4,8 +4,6 @@ import { Button } from '../../components/ui/Button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/Table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../../components/ui/DropdownMenu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/Dialog';
-import { Input } from '../../components/ui/Input';
-import { Label } from '../../components/ui/Label';
 import { FloatingInput, FloatingSelect } from '../../components/ui';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { FilterSheet } from '../../components/ui/FilterSheet';
@@ -259,7 +257,7 @@ const TransactionTypesPage: React.FC = () => {
 
       {/* Edit Modal */}
       <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Thông tin loại giao dịch</DialogTitle>
           </DialogHeader>
@@ -292,15 +290,14 @@ const TransactionTypesPage: React.FC = () => {
             </div>
             <div>
               <FloatingSelect
-                id="status"
                 label="Trạng thái"
                 value={formData.status}
-                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'active' | 'inactive' }))}
-              >
-                <option value="">Chọn trạng thái</option>
-                <option value="active">Hoạt động</option>
-                <option value="inactive">Không hoạt động</option>
-              </FloatingSelect>
+                onChange={(value) => setFormData(prev => ({ ...prev, status: value as 'active' | 'inactive' }))}
+                options={[
+                  { value: "active", label: "Hoạt động" },
+                  { value: "inactive", label: "Không hoạt động" }
+                ]}
+              />
             </div>
             <div className="flex gap-2 pt-4">
               <Button 

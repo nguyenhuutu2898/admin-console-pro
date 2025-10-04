@@ -1,33 +1,31 @@
 import * as React from "react";
 import { cn } from "../../lib/utils";
-import { CustomDropdown } from "./CustomDropdown";
+import { CustomDatePicker } from "./CustomDatePicker";
 
-interface DropdownOption {
-  value: string;
+interface FloatingDatePickerProps {
   label: string;
-  disabled?: boolean;
-}
-
-interface FloatingSelectProps {
-  label: string;
-  options: DropdownOption[];
   value: string;
   onChange: (value: string) => void;
+  placeholder?: string;
   infoIcon?: boolean;
   required?: boolean;
   disabled?: boolean;
   className?: string;
+  min?: string;
+  max?: string;
 }
 
-export const FloatingSelect: React.FC<FloatingSelectProps> = ({
+export const FloatingDatePicker: React.FC<FloatingDatePickerProps> = ({
   label,
-  options,
   value,
   onChange,
+  placeholder = "Chọn ngày...",
   infoIcon = false,
   required = false,
   disabled = false,
   className,
+  min,
+  max,
 }) => {
   const autoId = React.useId();
   const [isFocused, setIsFocused] = React.useState(false);
@@ -37,17 +35,17 @@ export const FloatingSelect: React.FC<FloatingSelectProps> = ({
   // CSS dùng attribute selector để tránh vấn đề escape id có dấu `:`
   const css = `
     /* Label ontop khi focus hoặc có value */
-    .custom-dropdown-${autoId}:focus-within + label,
-    .custom-dropdown-${autoId}.has-value + label {
+    .custom-datepicker-${autoId}:focus-within + label,
+    .custom-datepicker-${autoId}.has-value + label {
       font-size: 11px;
       top: -5px;
     }
     /* Màu khi focus */
-    .custom-dropdown-${autoId}:focus-within + label { color: #2563eb; }
+    .custom-datepicker-${autoId}:focus-within + label { color: #2563eb; }
 
     /* Icon chỉ hiện khi label ontop (focus/has value) */
-    .custom-dropdown-${autoId}:focus-within + label .info-icon,
-    .custom-dropdown-${autoId}.has-value + label .info-icon {
+    .custom-datepicker-${autoId}:focus-within + label .info-icon,
+    .custom-datepicker-${autoId}.has-value + label .info-icon {
       display: inline-block;
     }
   `;
@@ -56,18 +54,20 @@ export const FloatingSelect: React.FC<FloatingSelectProps> = ({
     <div className="relative mb-3">
       <div 
         className={cn(
-          "custom-dropdown-" + autoId,
+          "custom-datepicker-" + autoId,
           hasValue && "has-value"
         )}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
       >
-        <CustomDropdown
-          options={options}
+        <CustomDatePicker
           value={value}
           onChange={onChange}
+          placeholder={placeholder}
           disabled={disabled}
           className="w-full"
+          min={min}
+          max={max}
         />
       </div>
 

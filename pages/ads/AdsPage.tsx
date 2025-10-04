@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../componen
 import { Input } from '../../components/ui/Input';
 import { Label } from '../../components/ui/Label';
 import { Select } from '../../components/ui/Select';
-import { FloatingInput, FloatingSelect } from '../../components/ui';
+import { FloatingInput, FloatingSelect, FloatingDatePicker } from '../../components/ui';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { FilterSheet } from '../../components/ui/FilterSheet';
 import { FilterChips } from '../../components/ui/FilterChips';
@@ -450,7 +450,7 @@ const AdsPage: React.FC = () => {
 
       {/* Create Modal */}
       <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Tạo quảng cáo</DialogTitle>
           </DialogHeader>
@@ -474,17 +474,16 @@ const AdsPage: React.FC = () => {
             </div>
             <div>
               <FloatingSelect
-                id="type"
                 label="Loại quảng cáo"
                 required={true}
                 value={formData.type}
-                onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as 'image' | 'video' | 'banner' }))}
-              >
-                <option value="">Chọn loại quảng cáo</option>
-                <option value="image">Hình ảnh</option>
-                <option value="video">Video</option>
-                <option value="banner">Banner</option>
-              </FloatingSelect>
+                onChange={(value) => setFormData(prev => ({ ...prev, type: value as 'image' | 'video' | 'banner' }))}
+                options={[
+                  { value: "image", label: "Hình ảnh" },
+                  { value: "video", label: "Video" },
+                  { value: "banner", label: "Banner" }
+                ]}
+              />
             </div>
             <div>
               <FloatingInput
@@ -496,34 +495,31 @@ const AdsPage: React.FC = () => {
               />
             </div>
             <div>
-              <FloatingInput
-                id="startDate"
+              <FloatingDatePicker
                 label="Ngày bắt đầu"
-                type="date"
                 value={formData.startDate}
-                onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
+                onChange={(value) => setFormData(prev => ({ ...prev, startDate: value }))}
+                min={new Date().toISOString().split('T')[0]}
               />
             </div>
             <div>
-              <FloatingInput
-                id="endDate"
+              <FloatingDatePicker
                 label="Ngày kết thúc"
-                type="date"
                 value={formData.endDate}
-                onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
+                onChange={(value) => setFormData(prev => ({ ...prev, endDate: value }))}
+                min={formData.startDate || new Date().toISOString().split('T')[0]}
               />
             </div>
             <div>
               <FloatingSelect
-                id="isActive"
                 label="Trạng thái"
                 value={formData.isActive ? 'active' : 'inactive'}
-                onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.value === 'active' }))}
-              >
-                <option value="">Chọn trạng thái</option>
-                <option value="active">Hoạt động</option>
-                <option value="inactive">Không hoạt động</option>
-              </FloatingSelect>
+                onChange={(value) => setFormData(prev => ({ ...prev, isActive: value === 'active' }))}
+                options={[
+                  { value: "active", label: "Hoạt động" },
+                  { value: "inactive", label: "Không hoạt động" }
+                ]}
+              />
             </div>
             <div className="flex gap-2 pt-4">
               <Button 
@@ -543,82 +539,88 @@ const AdsPage: React.FC = () => {
 
       {/* Edit Modal */}
       <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Thông tin quảng cáo</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            {/* Row 1: Tiêu đề, Mô tả */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <FloatingInput
+                  id="edit-title"
+                  label="Tiêu đề quảng cáo"
+                  required={true}
+                  value={formData.title}
+                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                />
+              </div>
+              <div>
+                <FloatingInput
+                  id="edit-description"
+                  label="Mô tả"
+                  value={formData.description}
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                />
+              </div>
+            </div>
+            {/* Row 2: Loại quảng cáo, Thời lượng */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <FloatingSelect
+                  label="Loại quảng cáo"
+                  required={true}
+                  value={formData.type}
+                  onChange={(value) => setFormData(prev => ({ ...prev, type: value as 'image' | 'video' | 'banner' }))}
+                  options={[
+                    { value: "image", label: "Hình ảnh" },
+                    { value: "video", label: "Video" },
+                    { value: "banner", label: "Banner" }
+                  ]}
+                />
+              </div>
+              <div>
+                <FloatingInput
+                  id="edit-duration"
+                  label="Thời lượng (giây)"
+                  type="number"
+                  value={formData.duration}
+                  onChange={(e) => setFormData(prev => ({ ...prev, duration: parseInt(e.target.value) || 0 }))}
+                />
+              </div>
+            </div>
+            
+            {/* Row 3: Ngày bắt đầu, Ngày kết thúc */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <FloatingDatePicker
+                  label="Ngày bắt đầu"
+                  value={formData.startDate}
+                  onChange={(value) => setFormData(prev => ({ ...prev, startDate: value }))}
+                  min={new Date().toISOString().split('T')[0]}
+                />
+              </div>
+              <div>
+                <FloatingDatePicker
+                  label="Ngày kết thúc"
+                  value={formData.endDate}
+                  onChange={(value) => setFormData(prev => ({ ...prev, endDate: value }))}
+                  min={formData.startDate || new Date().toISOString().split('T')[0]}
+                />
+              </div>
+            </div>
+            
+            {/* Row 4: Trạng thái */}
             <div>
-              <Label htmlFor="edit-code">Mã quảng cáo *</Label>
-              <Input
-                id="edit-code"
-                value={formData.code}
-                onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value }))}
-                placeholder="Nhập mã quảng cáo"
+              <FloatingSelect
+                label="Trạng thái"
+                value={formData.isActive ? 'active' : 'inactive'}
+                onChange={(value) => setFormData(prev => ({ ...prev, isActive: value === 'active' }))}
+                options={[
+                  { value: "active", label: "Hoạt động" },
+                  { value: "inactive", label: "Không hoạt động" }
+                ]}
               />
-            </div>
-            <div>
-              <Label htmlFor="edit-name">Tên quảng cáo *</Label>
-              <Input
-                id="edit-name"
-                value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Nhập tên quảng cáo"
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-type">Loại quảng cáo *</Label>
-              <Select
-                id="edit-type"
-                value={formData.type}
-                onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as 'image' | 'video' | 'html' | 'playlist' }))}
-              >
-                <option value="image">Hình ảnh</option>
-                <option value="video">Video</option>
-                <option value="html">HTML</option>
-                <option value="playlist">Playlist</option>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="edit-branchId">Chi nhánh</Label>
-              <Input
-                id="edit-branchId"
-                value={formData.branchId}
-                onChange={(e) => setFormData(prev => ({ ...prev, branchId: e.target.value }))}
-                placeholder="Nhập ID chi nhánh (để trống cho tất cả)"
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-startDate">Ngày bắt đầu</Label>
-              <Input
-                id="edit-startDate"
-                type="date"
-                value={formData.startDate}
-                onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-endDate">Ngày kết thúc</Label>
-              <Input
-                id="edit-endDate"
-                type="date"
-                value={formData.endDate}
-                onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-status">Trạng thái</Label>
-              <Select
-                id="edit-status"
-                value={formData.status}
-                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'draft' | 'scheduled' | 'running' | 'paused' | 'ended' }))}
-              >
-                <option value="draft">Bản nháp</option>
-                <option value="scheduled">Đã lên lịch</option>
-                <option value="running">Đang chạy</option>
-                <option value="paused">Tạm dừng</option>
-                <option value="ended">Đã kết thúc</option>
-              </Select>
             </div>
             <div className="flex gap-2 pt-4">
               <Button 

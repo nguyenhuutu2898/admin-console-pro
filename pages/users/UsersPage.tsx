@@ -4,9 +4,6 @@ import { Button } from '../../components/ui/Button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/Table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../../components/ui/DropdownMenu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/Dialog';
-import { Input } from '../../components/ui/Input';
-import { Label } from '../../components/ui/Label';
-import { Select } from '../../components/ui/Select';
 import { FloatingInput, FloatingSelect } from '../../components/ui';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { FilterSheet } from '../../components/ui/FilterSheet';
@@ -416,7 +413,7 @@ const UsersPage: React.FC = () => {
 
       {/* Create Modal */}
       <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Tạo người dùng</DialogTitle>
           </DialogHeader>
@@ -441,17 +438,16 @@ const UsersPage: React.FC = () => {
             </div>
             <div>
               <FloatingSelect
-                id="role"
                 label="Quyền hạn"
                 required={true}
                 value={formData.role}
-                onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value as UserRole }))}
-              >
-                <option value="">Chọn quyền hạn</option>
-                <option value="STAFF">Staff</option>
-                <option value="BRANCH_ADMIN">Branch Admin</option>
-                <option value="SUPER_ADMIN">Super Admin</option>
-              </FloatingSelect>
+                onChange={(value) => setFormData(prev => ({ ...prev, role: value as UserRole }))}
+                options={[
+                  { value: "STAFF", label: "Staff" },
+                  { value: "BRANCH_ADMIN", label: "Branch Admin" },
+                  { value: "SUPER_ADMIN", label: "Super Admin" }
+                ]}
+              />
             </div>
             <div>
               <FloatingInput
@@ -463,16 +459,15 @@ const UsersPage: React.FC = () => {
             </div>
             <div>
               <FloatingSelect
-                id="status"
                 label="Trạng thái"
                 required={true}
                 value={formData.status}
-                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'active' | 'inactive' }))}
-              >
-                <option value="">Chọn trạng thái</option>
-                <option value="active">Hoạt động</option>
-                <option value="inactive">Tạm dừng</option>
-              </FloatingSelect>
+                onChange={(value) => setFormData(prev => ({ ...prev, status: value as 'active' | 'inactive' }))}
+                options={[
+                  { value: "active", label: "Hoạt động" },
+                  { value: "inactive", label: "Tạm dừng" }
+                ]}
+              />
             </div>
             <div className="flex gap-2 pt-4">
               <Button 
@@ -492,7 +487,7 @@ const UsersPage: React.FC = () => {
 
       {/* Edit Modal */}
       <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Thông tin người dùng</DialogTitle>
           </DialogHeader>
@@ -517,17 +512,16 @@ const UsersPage: React.FC = () => {
             </div>
             <div>
               <FloatingSelect
-                id="edit-role"
                 label="Quyền hạn"
                 required={true}
                 value={formData.role}
-                onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value as UserRole }))}
-              >
-                <option value="">Chọn quyền hạn</option>
-                <option value="STAFF">Staff</option>
-                <option value="BRANCH_ADMIN">Branch Admin</option>
-                <option value="SUPER_ADMIN">Super Admin</option>
-              </FloatingSelect>
+                onChange={(value) => setFormData(prev => ({ ...prev, role: value as UserRole }))}
+                options={[
+                  { value: "STAFF", label: "Staff" },
+                  { value: "BRANCH_ADMIN", label: "Branch Admin" },
+                  { value: "SUPER_ADMIN", label: "Super Admin" }
+                ]}
+              />
             </div>
             <div>
               <FloatingInput
@@ -539,16 +533,15 @@ const UsersPage: React.FC = () => {
             </div>
             <div>
               <FloatingSelect
-                id="edit-status"
                 label="Trạng thái"
                 required={true}
                 value={formData.status}
-                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'active' | 'inactive' }))}
-              >
-                <option value="">Chọn trạng thái</option>
-                <option value="active">Hoạt động</option>
-                <option value="inactive">Tạm dừng</option>
-              </FloatingSelect>
+                onChange={(value) => setFormData(prev => ({ ...prev, status: value as 'active' | 'inactive' }))}
+                options={[
+                  { value: "active", label: "Hoạt động" },
+                  { value: "inactive", label: "Tạm dừng" }
+                ]}
+              />
             </div>
             <div className="flex gap-2 pt-4">
               <Button 
@@ -568,7 +561,7 @@ const UsersPage: React.FC = () => {
 
       {/* Reset Password Modal */}
       <Dialog open={showResetPasswordModal} onOpenChange={setShowResetPasswordModal}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Cấp mật khẩu mới</DialogTitle>
           </DialogHeader>

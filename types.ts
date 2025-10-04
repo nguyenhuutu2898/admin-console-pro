@@ -203,3 +203,33 @@ export interface CreateAdvertisementData {
   targetBranchIds: string[];
   isActive: boolean;
 }
+
+// Generic types for better reusability
+export interface BaseEntity {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PageResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+}
+
+export interface FilterBase {
+  [key: string]: any;
+}
+
+// Update data types (partial of create data)
+export type UpdateBranchData = Partial<CreateBranchData>;
+export type UpdateUserData = Partial<CreateUserData>;
+export type UpdateKioskData = Partial<CreateKioskData>;
+export type UpdateAdvertisementData = Partial<CreateAdvertisementData>;

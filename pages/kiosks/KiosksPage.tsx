@@ -4,9 +4,6 @@ import { Button } from '../../components/ui/Button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/Table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../../components/ui/DropdownMenu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/Dialog';
-import { Input } from '../../components/ui/Input';
-import { Label } from '../../components/ui/Label';
-import { Select } from '../../components/ui/Select';
 import { FloatingInput, FloatingSelect } from '../../components/ui';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { FilterSheet } from '../../components/ui/FilterSheet';
@@ -394,7 +391,7 @@ const KiosksPage: React.FC = () => {
 
       {/* Create Modal */}
       <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Tạo thiết bị</DialogTitle>
           </DialogHeader>
@@ -428,16 +425,15 @@ const KiosksPage: React.FC = () => {
             </div>
             <div>
               <FloatingSelect
-                id="status"
                 label="Trạng thái"
                 value={formData.status}
-                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'connected' | 'disconnected' | 'inactive' }))}
-              >
-                <option value="">Chọn trạng thái</option>
-                <option value="disconnected">Chưa kết nối</option>
-                <option value="connected">Đã kết nối</option>
-                <option value="inactive">Không hoạt động</option>
-              </FloatingSelect>
+                onChange={(value) => setFormData(prev => ({ ...prev, status: value as 'connected' | 'disconnected' | 'inactive' }))}
+                options={[
+                  { value: "disconnected", label: "Chưa kết nối" },
+                  { value: "connected", label: "Đã kết nối" },
+                  { value: "inactive", label: "Không hoạt động" }
+                ]}
+              />
             </div>
             <div className="flex gap-2 pt-4">
               <Button 
@@ -457,7 +453,7 @@ const KiosksPage: React.FC = () => {
 
       {/* Edit Modal */}
       <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Thông tin liên kết thiết bị</DialogTitle>
           </DialogHeader>
@@ -491,16 +487,15 @@ const KiosksPage: React.FC = () => {
             </div>
             <div>
               <FloatingSelect
-                id="edit-status"
                 label="Trạng thái"
                 value={formData.status}
-                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'connected' | 'disconnected' | 'inactive' }))}
-              >
-                <option value="">Chọn trạng thái</option>
-                <option value="disconnected">Chưa kết nối</option>
-                <option value="connected">Đã kết nối</option>
-                <option value="inactive">Không hoạt động</option>
-              </FloatingSelect>
+                onChange={(value) => setFormData(prev => ({ ...prev, status: value as 'connected' | 'disconnected' | 'inactive' }))}
+                options={[
+                  { value: "disconnected", label: "Chưa kết nối" },
+                  { value: "connected", label: "Đã kết nối" },
+                  { value: "inactive", label: "Không hoạt động" }
+                ]}
+              />
             </div>
             <div className="flex gap-2 pt-4">
               <Button 
@@ -520,7 +515,7 @@ const KiosksPage: React.FC = () => {
 
       {/* Connect Device Modal */}
       <Dialog open={showConnectModal} onOpenChange={setShowConnectModal}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Kết nối thiết bị</DialogTitle>
           </DialogHeader>
