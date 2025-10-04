@@ -8,18 +8,12 @@ import MainLayout from './components/layout/MainLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 
 import LoginPage from './pages/auth/LoginPage';
-import DashboardPage from './pages/dashboard/DashboardPage';
-import OrdersPage from './pages/orders/OrdersPage';
-import ProductsPage from './pages/products/ProductsPage';
-import CustomersPage from './pages/customers/CustomersPage';
-import AnalyticsPage from './pages/analytics/AnalyticsPage';
 import SettingsPage from './pages/settings/SettingsPage';
 import { useSettingsStore } from './store/settingsStore';
-import AdminPage from './pages/admin/AdminPage';
 import UsersPage from './pages/users/UsersPage';
 import BranchesPage from './pages/branches/BranchesPage';
 import KiosksPage from './pages/kiosks/KiosksPage';
-import AdvertisementsPage from './pages/advertisements/AdvertisementsPage';
+import AdsPage from './pages/ads/AdsPage';
 import TransactionTypesPage from './pages/transaction-types/TransactionTypesPage';
 
 const queryClient = new QueryClient();
@@ -46,15 +40,13 @@ function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<DashboardPage />} />
-            <Route path="dashboard" element={<DashboardPage />} />
+            <Route index element={<BranchesPage />} />
             <Route path="branches" element={<BranchesPage />} />
             <Route path="users" element={<UsersPage />} />
             <Route path="kiosks" element={<KiosksPage />} />
-            <Route path="advertisements" element={<AdvertisementsPage />} />
+            <Route path="ads" element={<AdsPage />} />
             <Route path="transaction-types" element={<TransactionTypesPage />} />
             <Route path="settings" element={<SettingsPage />} />
-            <Route path="admin" element={<AdminPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

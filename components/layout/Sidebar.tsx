@@ -1,20 +1,19 @@
 
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, ShoppingCart, Package, Users, LineChart, Settings, ChevronLeft, Shield, Search, UserCheck, ArrowLeftRight, Sparkles, Circle, Building, Monitor, Image, Play, Receipt } from '../Icons';
+import { Home, ShoppingCart, Package, Users, LineChart, Settings, ChevronLeft, Shield, Search, UserCheck, ArrowLeftRight, Sparkles, Circle, Building, Monitor, Image, Play, Receipt, MoreVertical } from '../Icons';
 import { cn } from '../../lib/utils';
 import { useAuthStore } from '../../store/authStore';
 import { type NavItem, UserRole } from '../../types';
 import { Button } from '../ui/Button';
 
 const navItems: NavItem[] = [
-  { title: 'Dashboard', href: '/dashboard', icon: Home, roles: [UserRole.ADMIN, UserRole.STAFF, UserRole.VIEWER] },
-  { title: 'Branch Management', href: '/branches', icon: Building, roles: [UserRole.ADMIN, UserRole.STAFF] },
-  { title: 'User Management', href: '/users', icon: Users, roles: [UserRole.ADMIN, UserRole.STAFF] },
-  { title: 'Kiosk Management', href: '/kiosks', icon: Monitor, roles: [UserRole.ADMIN, UserRole.STAFF] },
-  { title: 'Advertisement Management', href: '/advertisements', icon: Image, roles: [UserRole.ADMIN, UserRole.STAFF] },
-  { title: 'Transaction Types', href: '/transaction-types', icon: Receipt, roles: [UserRole.ADMIN, UserRole.STAFF] },
-  { title: 'Settings', href: '/settings', icon: Settings, roles: [UserRole.ADMIN, UserRole.STAFF, UserRole.VIEWER] },
+  { title: 'Chi nhánh', href: '/branches', icon: Building, roles: [UserRole.SUPER_ADMIN, UserRole.BRANCH_ADMIN, UserRole.STAFF] },
+  { title: 'Phân quyền', href: '/users', icon: Users, roles: [UserRole.SUPER_ADMIN, UserRole.BRANCH_ADMIN, UserRole.STAFF] },
+  { title: 'Kiosk', href: '/kiosks', icon: Monitor, roles: [UserRole.SUPER_ADMIN, UserRole.BRANCH_ADMIN, UserRole.STAFF] },
+  { title: 'Quảng cáo', href: '/ads', icon: Image, roles: [UserRole.SUPER_ADMIN, UserRole.BRANCH_ADMIN, UserRole.STAFF] },
+  { title: 'Loại giao dịch', href: '/transaction-types', icon: Receipt, roles: [UserRole.SUPER_ADMIN, UserRole.BRANCH_ADMIN, UserRole.STAFF] },
+  { title: 'Thiết lập', href: '/settings', icon: Settings, roles: [UserRole.SUPER_ADMIN, UserRole.BRANCH_ADMIN, UserRole.STAFF] },
 ];
 
 interface SidebarProps {
@@ -28,6 +27,28 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const userHasRole = (roles: UserRole[]) => user && roles.includes(user.role);
+  
+  // Filter menu items based on user role and permissions
+  const getFilteredNavItems = () => {
+    if (!user) return [];
+    
+    return navItems.filter(item => {
+      // SUPER_ADMIN can see everything
+      if (user.role === UserRole.SUPER_ADMIN) return true;
+      
+      // BRANCH_ADMIN can see most things except some admin-only features
+      if (user.role === UserRole.BRANCH_ADMIN) {
+        return true; // Can see all menu items but permissions are handled in each page
+      }
+      
+      // STAFF can see all items but with limited permissions
+      if (user.role === UserRole.STAFF) {
+        return true; // Can see all menu items but permissions are handled in each page
+      }
+      
+      return false;
+    });
+  };
 
   return (
     <>
@@ -45,17 +66,17 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
         )}
       >
         <div className="flex h-16 items-center justify-center border-b border-red-700 px-6">
-          <NavLink to="/" className="flex items-center gap-2 font-semibold">
+          <NavLink to="/branches" className="flex items-center gap-2 font-semibold">
             <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
-              <div className="w-6 h-6 bg-red-800 rounded-sm"></div>
+              <div className="w-6 h-6 bg-gradient-to-br from-green-500 to-red-500 rounded-sm"></div>
             </div>
-            {!isCollapsed && <span className="text-white font-bold">Portal Admin</span>}
+            {!isCollapsed && <span className="text-white font-bold">Admin Console Pro</span>}
           </NavLink>
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-          {navItems.filter(item => userHasRole(item.roles)).map((item) => {
-            const isActive = location.pathname === item.href || (item.href !== '/dashboard' && location.pathname.startsWith(item.href));
+          {getFilteredNavItems().map((item) => {
+            const isActive = location.pathname === item.href || location.pathname.startsWith(item.href);
             return (
               <NavLink
                 key={item.title}
@@ -63,7 +84,7 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
                 onClick={() => setSidebarOpen(false)}
                 className={cn(
                   'flex items-center gap-3 rounded-lg px-3 py-3 text-white/80 transition-all hover:text-white hover:bg-red-700/50',
-                  isActive && 'bg-red-700 text-white',
+                  isActive && 'bg-gray-200 text-black',
                   isCollapsed && 'justify-center px-2'
                 )}
               >
@@ -82,7 +103,7 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen }) => {
               className="rounded-full w-full justify-start px-3 text-white hover:bg-red-700/50"
             >
                 <ChevronLeft className={cn("h-5 w-5 transition-transform", isCollapsed && "rotate-180")}/>
-                {!isCollapsed && <span className="ml-3">Collapse</span>}
+                {!isCollapsed && <span className="ml-3">Thu gọn</span>}
             </Button>
         </div>
       </aside>

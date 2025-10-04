@@ -1,66 +1,73 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/Table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../../components/ui/DropdownMenu';
-import { Skeleton } from '../../components/ui/Skeleton';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/Dialog';
-import { Select } from '../../components/ui/Select';
-import { Search, Filter, Plus, MoreVertical, Edit, Trash2, Building } from '../../components/Icons';
-import { branchesApi } from '../../services/api';
-import { useDebounce } from '../../hooks/useDebounce';
-import { type Branch } from '../../types';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/Dialog';
+import { Input } from '../../components/ui/Input';
+import { Label } from '../../components/ui/Label';
+import { SearchBar } from '../../components/ui/SearchBar';
+import { FilterSheet } from '../../components/ui/FilterSheet';
+import { FilterChips } from '../../components/ui/FilterChips';
+import { PaginationFooter } from '../../components/ui/PaginationFooter';
+import { EmptyState } from '../../components/ui/EmptyState';
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { MoreVertical, Edit, Trash2, Plus, Filter } from '../../components/Icons';
+import { branchesApi } from '../../services/branches';
+import { useAuth } from '../../hooks/useAuth';
+import { Branch, LocationFilter } from '../../types';
 
 const BranchesPage: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showFilterModal, setShowFilterModal] = useState(false);
-  const [filterStatus, setFilterStatus] = useState('');
-  const [appliedFilters, setAppliedFilters] = useState({ status: '' });
-  const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    address: '',
-    phone: '',
-    email: '',
-    managerName: ''
-  });
-  
+  const { canCreate, canEdit, canDelete } = useAuth();
   const queryClient = useQueryClient();
-  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  const { data: branchesData, isLoading } = useQuery({
-    queryKey: ['branches', currentPage, itemsPerPage, debouncedSearchTerm, appliedFilters],
+  // State management
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [search, setSearch] = useState('');
+  const [filters, setFilters] = useState<LocationFilter>({});
+  const [showFilterSheet, setShowFilterSheet] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
+  const [deletingBranch, setDeletingBranch] = useState<Branch | null>(null);
+
+  // Form data
+  const [formData, setFormData] = useState({
+    code: '',
+    name: '',
+    province: '',
+    district: '',
+    ward: '',
+    address: '',
+  });
+
+  // Fetch branches
+  const { data: branchesData, isLoading, error } = useQuery({
+    queryKey: ['branches', page, limit, search, filters],
     queryFn: () => branchesApi.getBranches({
-      page: currentPage,
-      limit: itemsPerPage,
-      q: debouncedSearchTerm,
-      status: appliedFilters.status
+      page,
+      limit,
+      q: search,
+      ...filters
     }),
   });
 
-  const deleteBranchMutation = useMutation({
-    mutationFn: branchesApi.deleteBranch,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['branches'] });
-    },
-  });
-
-  const createBranchMutation = useMutation({
+  // Mutations
+  const createMutation = useMutation({
     mutationFn: branchesApi.createBranch,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['branches'] });
-      setShowAddModal(false);
+      setShowCreateModal(false);
       resetForm();
     },
   });
 
-  const updateBranchMutation = useMutation({
-    mutationFn: branchesApi.updateBranch,
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Branch> }) =>
+      branchesApi.updateBranch(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['branches'] });
       setShowEditModal(false);
@@ -69,217 +76,250 @@ const BranchesPage: React.FC = () => {
     },
   });
 
-  const handleEdit = (branchId: string): void => {
-    const branch = branchesData?.data.find(b => b.id === branchId);
-    if (branch) {
-      setEditingBranch(branch);
-      setFormData({
-        name: branch.name,
-        address: branch.address,
-        phone: branch.phone || '',
-        email: branch.email || '',
-        managerName: branch.managerName || ''
-      });
-      setShowEditModal(true);
-    }
-  };
+  const deleteMutation = useMutation({
+    mutationFn: branchesApi.deleteBranch,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['branches'] });
+      setShowDeleteConfirm(false);
+      setDeletingBranch(null);
+    },
+  });
 
-  const resetForm = (): void => {
+  // Helper functions
+  const resetForm = () => {
     setFormData({
+      code: '',
       name: '',
+      province: '',
+      district: '',
+      ward: '',
       address: '',
-      phone: '',
-      email: '',
-      managerName: ''
     });
   };
 
-  const handleDelete = async (branchId: string): Promise<void> => {
-    if (window.confirm('Are you sure you want to delete this branch?')) {
-      try {
-        await deleteBranchMutation.mutateAsync(branchId);
-      } catch (error) {
-        console.error('Delete failed:', error);
-      }
-    }
+  const handleCreate = () => {
+    if (!formData.code || !formData.name) return;
+    createMutation.mutate(formData);
   };
 
-  const handleAddBranch = (): void => {
-    resetForm();
-    setShowAddModal(true);
+  const handleEdit = (branch: Branch) => {
+    setEditingBranch(branch);
+    setFormData({
+      code: branch.code,
+      name: branch.name,
+      province: branch.province || '',
+      district: branch.district || '',
+      ward: branch.ward || '',
+      address: branch.address || '',
+    });
+    setShowEditModal(true);
   };
 
-  const handleSubmitAdd = (): void => {
-    if (!formData.name || !formData.address) {
-      alert('Please fill in required fields');
-      return;
-    }
-    
-    createBranchMutation.mutate({
-      name: formData.name,
-      address: formData.address,
-      phone: formData.phone || undefined,
-      email: formData.email || undefined,
-      managerName: formData.managerName || undefined,
-      isActive: true
+  const handleUpdate = () => {
+    if (!editingBranch || !formData.code || !formData.name) return;
+    updateMutation.mutate({
+      id: editingBranch.id,
+      data: formData
     });
   };
 
-  const handleSubmitEdit = (): void => {
-    if (!formData.name || !formData.address || !editingBranch) {
-      alert('Please fill in required fields');
-      return;
+  const handleDelete = (branch: Branch) => {
+    setDeletingBranch(branch);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = () => {
+    if (deletingBranch) {
+      deleteMutation.mutate(deletingBranch.id);
     }
-    
-    updateBranchMutation.mutate({
-      ...editingBranch,
-      name: formData.name,
-      address: formData.address,
-      phone: formData.phone || undefined,
-      email: formData.email || undefined,
-      managerName: formData.managerName || undefined,
-    });
   };
 
-  const handleFilterData = (): void => {
-    setShowFilterModal(true);
+  const handleApplyFilters = (newFilters: Record<string, string>) => {
+    setFilters(newFilters as LocationFilter);
+    setPage(1);
   };
 
-  const handleApplyFilters = (): void => {
-    setAppliedFilters({ status: filterStatus });
-    setCurrentPage(1);
-    setShowFilterModal(false);
+  const handleRemoveFilter = (key: string) => {
+    const newFilters = { ...filters };
+    delete newFilters[key as keyof LocationFilter];
+    setFilters(newFilters);
+    setPage(1);
   };
 
-  const handleClearFilters = (): void => {
-    setFilterStatus('');
-    setAppliedFilters({ status: '' });
-    setCurrentPage(1);
+  const handleClearFilters = () => {
+    setFilters({});
+    setPage(1);
   };
 
-  const getStatusBadge = (isActive: boolean) => {
+  // Filter chips
+  const filterChips = Object.entries(filters)
+    .filter(([_, value]) => value)
+    .map(([key, value]) => ({
+      key,
+      label: key === 'province' ? 'Tỉnh/Thành phố' :
+             key === 'district' ? 'Quận/Huyện' :
+             key === 'ward' ? 'Phường/Xã' : key,
+      value
+    }));
+
+  // Filter fields for FilterSheet
+  const filterFields = [
+    {
+      key: 'province',
+      label: 'Tỉnh/Thành phố',
+      type: 'text' as const,
+    },
+    {
+      key: 'district',
+      label: 'Quận/Huyện',
+      type: 'text' as const,
+    },
+    {
+      key: 'ward',
+      label: 'Phường/Xã',
+      type: 'text' as const,
+    },
+  ];
+
+  if (error) {
     return (
-      <span className={`px-2 py-1 text-xs rounded-full ${
-        isActive 
-          ? 'bg-green-100 text-green-800' 
-          : 'bg-red-100 text-red-800'
-      }`}>
-        {isActive ? 'Active' : 'Inactive'}
-      </span>
+      <div className="p-6">
+        <div className="text-center py-12">
+          <h3 className="text-lg font-medium text-red-600 mb-2">Lỗi tải dữ liệu</h3>
+          <p className="text-gray-500 mb-4">Không thể tải danh sách chi nhánh</p>
+          <Button onClick={() => window.location.reload()}>
+            Thử lại
+          </Button>
+        </div>
+      </div>
     );
-  };
+  }
 
   return (
     <div className="p-6">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Branch Management</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Danh sách chi nhánh</h1>
       </div>
 
-      {/* Search and Action Bar */}
+      {/* Search and Actions */}
       <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            type="text"
-            placeholder="Search branches..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 w-full"
-          />
-        </div>
+        <SearchBar
+          value={search}
+          onChange={setSearch}
+          placeholder="Mã/Tên chi nhánh"
+        />
         
         <div className="flex gap-2">
           <Button 
-            className="bg-green-600 hover:bg-green-700 text-white"
-            onClick={handleFilterData}
+            variant="outline"
+            onClick={() => setShowFilterSheet(true)}
           >
             <Filter className="h-4 w-4 mr-2" />
-            FILTER DATA
+            Lọc dữ liệu
           </Button>
-          <Button 
-            className="bg-green-600 hover:bg-green-700 text-white"
-            onClick={handleAddBranch}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            ADD BRANCH
-          </Button>
+          
+          {canCreate('branches') && (
+            <Button onClick={() => setShowCreateModal(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Thêm chi nhánh
+            </Button>
+          )}
         </div>
       </div>
+
+      {/* Filter Chips */}
+      <FilterChips
+        chips={filterChips}
+        onRemove={handleRemoveFilter}
+        onClearAll={handleClearFilters}
+      />
 
       {/* Table */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow className="bg-gray-50">
-              <TableHead className="font-semibold text-gray-900">Branch Name</TableHead>
-              <TableHead className="font-semibold text-gray-900">Address</TableHead>
-              <TableHead className="font-semibold text-gray-900">Manager</TableHead>
-              <TableHead className="font-semibold text-gray-900">Phone</TableHead>
-              <TableHead className="font-semibold text-gray-900">Status</TableHead>
-              <TableHead className="font-semibold text-gray-900">Actions</TableHead>
+              <TableHead className="font-semibold text-gray-900">Mã chi nhánh</TableHead>
+              <TableHead className="font-semibold text-gray-900">Tên chi nhánh</TableHead>
+              <TableHead className="font-semibold text-gray-900">Địa chỉ</TableHead>
+              <TableHead className="font-semibold text-gray-900">Trạng thái</TableHead>
+              <TableHead className="font-semibold text-gray-900">Thao tác</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              Array.from({ length: itemsPerPage }).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-48" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-20" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-20" /></TableCell>
-                </TableRow>
-              ))
-            ) : branchesData?.data.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center">No branches found.</TableCell>
+                <TableCell colSpan={5}>
+                  <LoadingSkeleton rows={5} columns={5} />
+                </TableCell>
+              </TableRow>
+            ) : branchesData?.items.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5}>
+                  <EmptyState
+                    title="Không có chi nhánh nào"
+                    description="Chưa có chi nhánh nào được tìm thấy."
+                    actionLabel="Thêm chi nhánh"
+                    onAction={() => setShowCreateModal(true)}
+                    canCreate={canCreate('branches')}
+                  />
+                </TableCell>
               </TableRow>
             ) : (
-              branchesData?.data.map((branch) => (
-                <TableRow key={branch.id} className="hover:bg-gray-50">
+              branchesData?.items.map((branch) => (
+                <TableRow 
+                  key={branch.id} 
+                  className="hover:bg-gray-50 cursor-pointer"
+                  onDoubleClick={() => canEdit('branches') && handleEdit(branch)}
+                >
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Building className="h-4 w-4 text-gray-500" />
-                      <span className="font-medium">{branch.name}</span>
+                    <div className="font-medium">{branch.code}</div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="font-medium">{branch.name}</div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm text-gray-600">
+                      {[branch.ward, branch.district, branch.province]
+                        .filter(Boolean)
+                        .join(', ')}
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm text-gray-600">{branch.address}</div>
+                    <span className={`px-2 py-1 text-xs rounded-full ${
+                      branch.status === 'active' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {branch.status === 'active' ? 'Hoạt động' : 'Tạm dừng'}
+                    </span>
                   </TableCell>
                   <TableCell>
-                    <div className="font-medium">{branch.managerName || '-'}</div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm text-gray-600">{branch.phone || '-'}</div>
-                  </TableCell>
-                  <TableCell>
-                    {getStatusBadge(branch.isActive)}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center justify-between">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEdit(branch.id)}>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {canEdit('branches') && (
+                          <DropdownMenuItem onClick={() => handleEdit(branch)}>
                             <Edit className="h-4 w-4 mr-2" />
-                            Edit
+                            Chỉnh sửa
                           </DropdownMenuItem>
+                        )}
+                        {canDelete('branches') && (
                           <DropdownMenuItem 
-                            onClick={() => handleDelete(branch.id)}
+                            onClick={() => handleDelete(branch)}
                             className="text-red-600"
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
-                            Delete Branch
+                            Xóa chi nhánh
                           </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))
@@ -289,244 +329,194 @@ const BranchesPage: React.FC = () => {
       </div>
 
       {/* Pagination */}
-      <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-700">Total: {branchesData?.total || 0}</span>
-          <select 
-            value={itemsPerPage} 
-            onChange={(e) => {
-              setItemsPerPage(Number(e.target.value));
-              setCurrentPage(1);
-            }}
-            className="px-3 py-1 border border-gray-300 rounded text-sm"
-          >
-            <option value={10}>10/page</option>
-            <option value={20}>20/page</option>
-            <option value={50}>50/page</option>
-          </select>
-        </div>
+      {branchesData && branchesData.total > 0 && (
+        <PaginationFooter
+          total={branchesData.total}
+          page={page}
+          limit={limit}
+          onPageChange={setPage}
+          onLimitChange={setLimit}
+          isLoading={isLoading}
+        />
+      )}
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-            disabled={currentPage === 1 || isLoading}
-          >
-            ←
-          </Button>
-          
-          {Array.from({ length: Math.min(5, Math.ceil((branchesData?.total || 0) / itemsPerPage)) }, (_, i) => {
-            const pageNum = i + 1;
-            return (
-              <Button
-                key={pageNum}
-                variant={currentPage === pageNum ? "default" : "outline"}
-                size="sm"
-                onClick={() => setCurrentPage(pageNum)}
-                className={currentPage === pageNum ? "bg-blue-600 text-white" : ""}
-                disabled={isLoading}
-              >
-                {pageNum}
-              </Button>
-            );
-          })}
-          
-          {Math.ceil((branchesData?.total || 0) / itemsPerPage) > 5 && (
-            <>
-              <span className="px-2">...</span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(Math.ceil((branchesData?.total || 0) / itemsPerPage))}
-                disabled={isLoading}
-              >
-                {Math.ceil((branchesData?.total || 0) / itemsPerPage)}
-              </Button>
-            </>
-          )}
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(prev => Math.min(Math.ceil((branchesData?.total || 0) / itemsPerPage), prev + 1))}
-            disabled={currentPage === Math.ceil((branchesData?.total || 0) / itemsPerPage) || isLoading}
-          >
-            →
-          </Button>
-        </div>
+      {/* Filter Sheet */}
+      <FilterSheet
+        isOpen={showFilterSheet}
+        onClose={() => setShowFilterSheet(false)}
+        onApply={handleApplyFilters}
+        onReset={handleClearFilters}
+        title="Lọc dữ liệu"
+        fields={filterFields}
+        appliedFilters={filters}
+      />
 
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-700">Jump to</span>
-          <Input
-            type="number"
-            min="1"
-            max={Math.ceil((branchesData?.total || 0) / itemsPerPage)}
-            value={currentPage}
-            onChange={(e) => setCurrentPage(Number(e.target.value))}
-            className="w-16 h-8 text-center"
-          />
-        </div>
-      </div>
-
-      {/* Add Branch Modal */}
-      <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
+      {/* Create Modal */}
+      <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Add New Branch</DialogTitle>
+            <DialogTitle>Tạo chi nhánh</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Branch Name *</label>
-              <Input 
-                placeholder="Enter branch name" 
+              <Label htmlFor="code">Mã chi nhánh *</Label>
+              <Input
+                id="code"
+                value={formData.code}
+                onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value }))}
+                placeholder="Nhập mã chi nhánh"
+              />
+            </div>
+            <div>
+              <Label htmlFor="name">Tên chi nhánh *</Label>
+              <Input
+                id="name"
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Nhập tên chi nhánh"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Address *</label>
-              <Input 
-                placeholder="Enter branch address" 
+              <Label htmlFor="province">Tỉnh/Thành phố</Label>
+              <Input
+                id="province"
+                value={formData.province}
+                onChange={(e) => setFormData(prev => ({ ...prev, province: e.target.value }))}
+                placeholder="Nhập tỉnh/thành phố"
+              />
+            </div>
+            <div>
+              <Label htmlFor="district">Quận/Huyện</Label>
+              <Input
+                id="district"
+                value={formData.district}
+                onChange={(e) => setFormData(prev => ({ ...prev, district: e.target.value }))}
+                placeholder="Nhập quận/huyện"
+              />
+            </div>
+            <div>
+              <Label htmlFor="ward">Phường/Xã</Label>
+              <Input
+                id="ward"
+                value={formData.ward}
+                onChange={(e) => setFormData(prev => ({ ...prev, ward: e.target.value }))}
+                placeholder="Nhập phường/xã"
+              />
+            </div>
+            <div>
+              <Label htmlFor="address">Địa chỉ</Label>
+              <Input
+                id="address"
                 value={formData.address}
                 onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Phone</label>
-              <Input 
-                placeholder="Enter phone number" 
-                value={formData.phone}
-                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Email</label>
-              <Input 
-                placeholder="Enter email address" 
-                value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Manager</label>
-              <Input 
-                placeholder="Enter manager name" 
-                value={formData.managerName}
-                onChange={(e) => setFormData(prev => ({ ...prev, managerName: e.target.value }))}
+                placeholder="Nhập địa chỉ"
               />
             </div>
             <div className="flex gap-2 pt-4">
               <Button 
                 className="flex-1" 
-                onClick={handleSubmitAdd}
-                disabled={createBranchMutation.isPending}
+                onClick={handleCreate}
+                disabled={createMutation.isPending}
               >
-                {createBranchMutation.isPending ? 'Adding...' : 'Add Branch'}
+                {createMutation.isPending ? 'Đang tạo...' : 'Tạo mới'}
               </Button>
-              <Button variant="outline" onClick={() => setShowAddModal(false)}>
-                Cancel
+              <Button variant="outline" onClick={() => setShowCreateModal(false)}>
+                Hủy
               </Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Edit Branch Modal */}
+      {/* Edit Modal */}
       <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Edit Branch</DialogTitle>
+            <DialogTitle>Thông tin chi nhánh</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Branch Name *</label>
-              <Input 
-                placeholder="Enter branch name" 
+              <Label htmlFor="edit-code">Mã chi nhánh *</Label>
+              <Input
+                id="edit-code"
+                value={formData.code}
+                onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value }))}
+                placeholder="Nhập mã chi nhánh"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-name">Tên chi nhánh *</Label>
+              <Input
+                id="edit-name"
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Nhập tên chi nhánh"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Address *</label>
-              <Input 
-                placeholder="Enter branch address" 
+              <Label htmlFor="edit-province">Tỉnh/Thành phố</Label>
+              <Input
+                id="edit-province"
+                value={formData.province}
+                onChange={(e) => setFormData(prev => ({ ...prev, province: e.target.value }))}
+                placeholder="Nhập tỉnh/thành phố"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-district">Quận/Huyện</Label>
+              <Input
+                id="edit-district"
+                value={formData.district}
+                onChange={(e) => setFormData(prev => ({ ...prev, district: e.target.value }))}
+                placeholder="Nhập quận/huyện"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-ward">Phường/Xã</Label>
+              <Input
+                id="edit-ward"
+                value={formData.ward}
+                onChange={(e) => setFormData(prev => ({ ...prev, ward: e.target.value }))}
+                placeholder="Nhập phường/xã"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-address">Địa chỉ</Label>
+              <Input
+                id="edit-address"
                 value={formData.address}
                 onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Phone</label>
-              <Input 
-                placeholder="Enter phone number" 
-                value={formData.phone}
-                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Email</label>
-              <Input 
-                placeholder="Enter email address" 
-                value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Manager</label>
-              <Input 
-                placeholder="Enter manager name" 
-                value={formData.managerName}
-                onChange={(e) => setFormData(prev => ({ ...prev, managerName: e.target.value }))}
+                placeholder="Nhập địa chỉ"
               />
             </div>
             <div className="flex gap-2 pt-4">
               <Button 
                 className="flex-1" 
-                onClick={handleSubmitEdit}
-                disabled={updateBranchMutation.isPending}
+                onClick={handleUpdate}
+                disabled={updateMutation.isPending}
               >
-                {updateBranchMutation.isPending ? 'Updating...' : 'Update Branch'}
+                {updateMutation.isPending ? 'Đang lưu...' : 'Lưu'}
               </Button>
               <Button variant="outline" onClick={() => setShowEditModal(false)}>
-                Cancel
+                Hủy
               </Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Filter Modal */}
-      <Dialog open={showFilterModal} onOpenChange={setShowFilterModal}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Filter Branches</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Status</label>
-              <Select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-              >
-                <option value="">All Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </Select>
-            </div>
-            <div className="flex gap-2 pt-4">
-              <Button className="flex-1" onClick={handleApplyFilters}>
-                Apply Filters
-              </Button>
-              <Button variant="outline" onClick={handleClearFilters}>
-                Clear
-              </Button>
-              <Button variant="outline" onClick={() => setShowFilterModal(false)}>
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Delete Confirmation */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={confirmDelete}
+        title="Xác nhận xóa"
+        message={`Bạn có chắc chắn muốn xóa chi nhánh "${deletingBranch?.name}" này không?`}
+        confirmText="Đồng ý"
+        cancelText="Không"
+        variant="destructive"
+        isLoading={deleteMutation.isPending}
+      />
     </div>
   );
 };

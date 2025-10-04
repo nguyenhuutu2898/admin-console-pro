@@ -14,12 +14,12 @@ import { PaginationFooter } from '../../components/ui/PaginationFooter';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
-import { MoreVertical, Edit, Trash2, Plus, Filter, Monitor, RefreshCcw } from '../../components/Icons';
-import { kiosksApi } from '../../services/kiosks';
+import { MoreVertical, Edit, Trash2, Plus, Filter, Image, Play, FileText, List } from '../../components/Icons';
+import { adsApi } from '../../services/ads';
 import { useAuth } from '../../hooks/useAuth';
-import { Kiosk, KioskFilter } from '../../types';
+import { Advertisement, AdFilter } from '../../types';
 
-const KiosksPage: React.FC = () => {
+const AdsPage: React.FC = () => {
   const { canCreate, canEdit, canDelete } = useAuth();
   const queryClient = useQueryClient();
 
@@ -27,29 +27,30 @@ const KiosksPage: React.FC = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState('');
-  const [filters, setFilters] = useState<KioskFilter>({});
+  const [filters, setFilters] = useState<AdFilter>({});
   const [showFilterSheet, setShowFilterSheet] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [showConnectModal, setShowConnectModal] = useState(false);
-  const [editingKiosk, setEditingKiosk] = useState<Kiosk | null>(null);
-  const [deletingKiosk, setDeletingKiosk] = useState<Kiosk | null>(null);
-  const [connectingKiosk, setConnectingKiosk] = useState<Kiosk | null>(null);
-  const [connectionCode, setConnectionCode] = useState<{ code: string; expiresIn: number } | null>(null);
+  const [editingAd, setEditingAd] = useState<Advertisement | null>(null);
+  const [deletingAd, setDeletingAd] = useState<Advertisement | null>(null);
 
   // Form data
   const [formData, setFormData] = useState({
-    code: '',
-    name: '',
-    branchId: '',
-    status: 'disconnected' as 'connected' | 'disconnected' | 'inactive',
+    title: '',
+    description: '',
+    type: 'image' as 'image' | 'video' | 'banner',
+    duration: 0,
+    startDate: '',
+    endDate: '',
+    targetBranchIds: [] as string[],
+    isActive: true,
   });
 
-  // Fetch kiosks
-  const { data: kiosksData, isLoading, error } = useQuery({
-    queryKey: ['kiosks', page, limit, search, filters],
-    queryFn: () => kiosksApi.getKiosks({
+  // Fetch ads
+  const { data: adsData, isLoading, error } = useQuery({
+    queryKey: ['ads', page, limit, search, filters],
+    queryFn: () => adsApi.getAds({
       page,
       limit,
       q: search,
@@ -59,38 +60,31 @@ const KiosksPage: React.FC = () => {
 
   // Mutations
   const createMutation = useMutation({
-    mutationFn: kiosksApi.createKiosk,
+    mutationFn: adsApi.createAd,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['kiosks'] });
+      queryClient.invalidateQueries({ queryKey: ['ads'] });
       setShowCreateModal(false);
       resetForm();
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Kiosk> }) =>
-      kiosksApi.updateKiosk(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<Ad> }) =>
+      adsApi.updateAd(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['kiosks'] });
+      queryClient.invalidateQueries({ queryKey: ['ads'] });
       setShowEditModal(false);
-      setEditingKiosk(null);
+      setEditingAd(null);
       resetForm();
     },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: kiosksApi.deleteKiosk,
+    mutationFn: adsApi.deleteAd,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['kiosks'] });
+      queryClient.invalidateQueries({ queryKey: ['ads'] });
       setShowDeleteConfirm(false);
-      setDeletingKiosk(null);
-    },
-  });
-
-  const connectMutation = useMutation({
-    mutationFn: kiosksApi.generateConnectCode,
-    onSuccess: (data) => {
-      setConnectionCode(data);
+      setDeletingAd(null);
     },
   });
 
@@ -100,65 +94,59 @@ const KiosksPage: React.FC = () => {
       code: '',
       name: '',
       branchId: '',
-      status: 'disconnected',
+      type: 'image',
+      startDate: '',
+      endDate: '',
+      status: 'draft',
     });
   };
 
   const handleCreate = () => {
-    if (!formData.code || !formData.name || !formData.branchId) return;
+    if (!formData.code || !formData.name) return;
     createMutation.mutate(formData);
   };
 
-  const handleEdit = (kiosk: Kiosk) => {
-    setEditingKiosk(kiosk);
+  const handleEdit = (ad: Ad) => {
+    setEditingAd(ad);
     setFormData({
-      code: kiosk.code,
-      name: kiosk.name,
-      branchId: kiosk.branchId,
-      status: kiosk.status,
+      code: ad.code,
+      name: ad.name,
+      branchId: ad.branchId || '',
+      type: ad.type,
+      startDate: ad.startDate || '',
+      endDate: ad.endDate || '',
+      status: ad.status,
     });
     setShowEditModal(true);
   };
 
   const handleUpdate = () => {
-    if (!editingKiosk || !formData.code || !formData.name || !formData.branchId) return;
+    if (!editingAd || !formData.code || !formData.name) return;
     updateMutation.mutate({
-      id: editingKiosk.id,
+      id: editingAd.id,
       data: formData
     });
   };
 
-  const handleDelete = (kiosk: Kiosk) => {
-    setDeletingKiosk(kiosk);
+  const handleDelete = (ad: Ad) => {
+    setDeletingAd(ad);
     setShowDeleteConfirm(true);
   };
 
   const confirmDelete = () => {
-    if (deletingKiosk) {
-      deleteMutation.mutate(deletingKiosk.id);
-    }
-  };
-
-  const handleConnect = (kiosk: Kiosk) => {
-    setConnectingKiosk(kiosk);
-    setShowConnectModal(true);
-    connectMutation.mutate(kiosk.id);
-  };
-
-  const handleRefreshConnectionCode = () => {
-    if (connectingKiosk) {
-      connectMutation.mutate(connectingKiosk.id);
+    if (deletingAd) {
+      deleteMutation.mutate(deletingAd.id);
     }
   };
 
   const handleApplyFilters = (newFilters: Record<string, string>) => {
-    setFilters(newFilters as KioskFilter);
+    setFilters(newFilters as AdFilter);
     setPage(1);
   };
 
   const handleRemoveFilter = (key: string) => {
     const newFilters = { ...filters };
-    delete newFilters[key as keyof KioskFilter];
+    delete newFilters[key as keyof AdFilter];
     setFilters(newFilters);
     setPage(1);
   };
@@ -174,7 +162,10 @@ const KiosksPage: React.FC = () => {
     .map(([key, value]) => ({
       key,
       label: key === 'branchId' ? 'Chi nhánh' :
-             key === 'status' ? 'Trạng thái' : key,
+             key === 'status' ? 'Trạng thái' :
+             key === 'type' ? 'Loại quảng cáo' :
+             key === 'startDate' ? 'Ngày bắt đầu' :
+             key === 'endDate' ? 'Ngày kết thúc' : key,
       value
     }));
 
@@ -190,27 +181,74 @@ const KiosksPage: React.FC = () => {
       label: 'Trạng thái',
       type: 'select' as const,
       options: [
-        { value: 'connected', label: 'Đã kết nối' },
-        { value: 'disconnected', label: 'Chưa kết nối' },
-        { value: 'inactive', label: 'Không hoạt động' },
+        { value: 'draft', label: 'Bản nháp' },
+        { value: 'scheduled', label: 'Đã lên lịch' },
+        { value: 'running', label: 'Đang chạy' },
+        { value: 'paused', label: 'Tạm dừng' },
+        { value: 'ended', label: 'Đã kết thúc' },
       ],
+    },
+    {
+      key: 'type',
+      label: 'Loại quảng cáo',
+      type: 'select' as const,
+      options: [
+        { value: 'image', label: 'Hình ảnh' },
+        { value: 'video', label: 'Video' },
+        { value: 'html', label: 'HTML' },
+        { value: 'playlist', label: 'Playlist' },
+      ],
+    },
+    {
+      key: 'startDate',
+      label: 'Ngày bắt đầu',
+      type: 'date' as const,
+    },
+    {
+      key: 'endDate',
+      label: 'Ngày kết thúc',
+      type: 'date' as const,
     },
   ];
 
+  const getTypeLabel = (type: string) => {
+    switch (type) {
+      case 'image': return 'Hình ảnh';
+      case 'video': return 'Video';
+      case 'html': return 'HTML';
+      case 'playlist': return 'Playlist';
+      default: return type;
+    }
+  };
+
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'image': return <Image className="h-4 w-4" />;
+      case 'video': return <Play className="h-4 w-4" />;
+      case 'html': return <FileText className="h-4 w-4" />;
+      case 'playlist': return <List className="h-4 w-4" />;
+      default: return <FileText className="h-4 w-4" />;
+    }
+  };
+
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'connected': return 'Đã kết nối';
-      case 'disconnected': return 'Chưa kết nối';
-      case 'inactive': return 'Không hoạt động';
+      case 'draft': return 'Bản nháp';
+      case 'scheduled': return 'Đã lên lịch';
+      case 'running': return 'Đang chạy';
+      case 'paused': return 'Tạm dừng';
+      case 'ended': return 'Đã kết thúc';
       default: return status;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'connected': return 'bg-green-100 text-green-800';
-      case 'disconnected': return 'bg-yellow-100 text-yellow-800';
-      case 'inactive': return 'bg-red-100 text-red-800';
+      case 'draft': return 'bg-gray-100 text-gray-800';
+      case 'scheduled': return 'bg-blue-100 text-blue-800';
+      case 'running': return 'bg-green-100 text-green-800';
+      case 'paused': return 'bg-yellow-100 text-yellow-800';
+      case 'ended': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -220,7 +258,7 @@ const KiosksPage: React.FC = () => {
       <div className="p-6">
         <div className="text-center py-12">
           <h3 className="text-lg font-medium text-red-600 mb-2">Lỗi tải dữ liệu</h3>
-          <p className="text-gray-500 mb-4">Không thể tải danh sách kiosk</p>
+          <p className="text-gray-500 mb-4">Không thể tải danh sách quảng cáo</p>
           <Button onClick={() => window.location.reload()}>
             Thử lại
           </Button>
@@ -233,7 +271,7 @@ const KiosksPage: React.FC = () => {
     <div className="p-6">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Kiosk</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Quảng cáo</h1>
       </div>
 
       {/* Search and Actions */}
@@ -241,7 +279,7 @@ const KiosksPage: React.FC = () => {
         <SearchBar
           value={search}
           onChange={setSearch}
-          placeholder="Tên kiosk/Mã kiosk"
+          placeholder="Mã quảng cáo/Tên quảng cáo"
         />
         
         <div className="flex gap-2">
@@ -253,10 +291,10 @@ const KiosksPage: React.FC = () => {
             Lọc dữ liệu
           </Button>
           
-          {canCreate('kiosks') && (
+          {canCreate('ads') && (
             <Button onClick={() => setShowCreateModal(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              Thêm kiosk
+              Thêm quảng cáo
             </Button>
           )}
         </div>
@@ -274,60 +312,76 @@ const KiosksPage: React.FC = () => {
         <Table>
           <TableHeader>
             <TableRow className="bg-gray-50">
-              <TableHead className="font-semibold text-gray-900">Mã kiosk</TableHead>
-              <TableHead className="font-semibold text-gray-900">Tên kiosk</TableHead>
+              <TableHead className="font-semibold text-gray-900">Mã quảng cáo</TableHead>
+              <TableHead className="font-semibold text-gray-900">Tên quảng cáo</TableHead>
+              <TableHead className="font-semibold text-gray-900">Loại</TableHead>
               <TableHead className="font-semibold text-gray-900">Chi nhánh</TableHead>
+              <TableHead className="font-semibold text-gray-900">Thời gian</TableHead>
               <TableHead className="font-semibold text-gray-900">Trạng thái</TableHead>
-              <TableHead className="font-semibold text-gray-900">Lần cuối kết nối</TableHead>
               <TableHead className="font-semibold text-gray-900">Thao tác</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6}>
-                  <LoadingSkeleton rows={5} columns={6} />
+                <TableCell colSpan={7}>
+                  <LoadingSkeleton rows={5} columns={7} />
                 </TableCell>
               </TableRow>
-            ) : kiosksData?.items.length === 0 ? (
+            ) : adsData?.items.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6}>
+                <TableCell colSpan={7}>
                   <EmptyState
-                    title="Không có kiosk nào"
-                    description="Chưa có kiosk nào được tìm thấy."
-                    actionLabel="Thêm kiosk"
+                    title="Không có quảng cáo nào"
+                    description="Chưa có quảng cáo nào được tìm thấy."
+                    actionLabel="Thêm quảng cáo"
                     onAction={() => setShowCreateModal(true)}
-                    canCreate={canCreate('kiosks')}
+                    canCreate={canCreate('ads')}
                   />
                 </TableCell>
               </TableRow>
             ) : (
-              kiosksData?.items.map((kiosk) => (
+              adsData?.items.map((ad) => (
                 <TableRow 
-                  key={kiosk.id} 
+                  key={ad.id} 
                   className="hover:bg-gray-50 cursor-pointer"
-                  onDoubleClick={() => canEdit('kiosks') && handleEdit(kiosk)}
+                  onDoubleClick={() => canEdit('ads') && handleEdit(ad)}
                 >
                   <TableCell>
-                    <div className="font-medium">{kiosk.code}</div>
+                    <div className="font-medium">{ad.code}</div>
                   </TableCell>
                   <TableCell>
-                    <div className="font-medium">{kiosk.name}</div>
+                    <div className="font-medium">{ad.name}</div>
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm text-gray-600">
-                      {kiosk.branchId}
+                    <div className="flex items-center gap-2">
+                      {getTypeIcon(ad.type)}
+                      <span className="text-sm">{getTypeLabel(ad.type)}</span>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(kiosk.status)}`}>
-                      {getStatusLabel(kiosk.status)}
+                    <div className="text-sm text-gray-600">
+                      {ad.branchId || 'Tất cả chi nhánh'}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm text-gray-600">
+                      {ad.startDate && ad.endDate ? (
+                        <>
+                          <div>{new Date(ad.startDate).toLocaleDateString('vi-VN')}</div>
+                          <div className="text-xs text-gray-400">
+                            đến {new Date(ad.endDate).toLocaleDateString('vi-VN')}
+                          </div>
+                        </>
+                      ) : (
+                        'Không giới hạn'
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(ad.status)}`}>
+                      {getStatusLabel(ad.status)}
                     </span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm text-gray-600">
-                      {kiosk.lastSeenAt ? new Date(kiosk.lastSeenAt).toLocaleString('vi-VN') : 'Chưa kết nối'}
-                    </div>
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -337,25 +391,19 @@ const KiosksPage: React.FC = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        {canEdit('kiosks') && (
-                          <DropdownMenuItem onClick={() => handleEdit(kiosk)}>
+                        {canEdit('ads') && (
+                          <DropdownMenuItem onClick={() => handleEdit(ad)}>
                             <Edit className="h-4 w-4 mr-2" />
                             Chỉnh sửa
                           </DropdownMenuItem>
                         )}
-                        {canEdit('kiosks') && (
-                          <DropdownMenuItem onClick={() => handleConnect(kiosk)}>
-                            <Monitor className="h-4 w-4 mr-2" />
-                            Kết nối thiết bị
-                          </DropdownMenuItem>
-                        )}
-                        {canDelete('kiosks') && (
+                        {canDelete('ads') && (
                           <DropdownMenuItem 
-                            onClick={() => handleDelete(kiosk)}
+                            onClick={() => handleDelete(ad)}
                             className="text-red-600"
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
-                            Xóa kiosk
+                            Xóa quảng cáo
                           </DropdownMenuItem>
                         )}
                       </DropdownMenuContent>
@@ -369,9 +417,9 @@ const KiosksPage: React.FC = () => {
       </div>
 
       {/* Pagination */}
-      {kiosksData && kiosksData.total > 0 && (
+      {adsData && adsData.total > 0 && (
         <PaginationFooter
-          total={kiosksData.total}
+          total={adsData.total}
           page={page}
           limit={limit}
           onPageChange={setPage}
@@ -395,34 +443,65 @@ const KiosksPage: React.FC = () => {
       <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Tạo thiết bị</DialogTitle>
+            <DialogTitle>Tạo quảng cáo</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="code">Mã kiosk *</Label>
+              <Label htmlFor="code">Mã quảng cáo *</Label>
               <Input
                 id="code"
                 value={formData.code}
                 onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value }))}
-                placeholder="Nhập mã kiosk"
+                placeholder="Nhập mã quảng cáo"
               />
             </div>
             <div>
-              <Label htmlFor="name">Tên kiosk *</Label>
+              <Label htmlFor="name">Tên quảng cáo *</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Nhập tên kiosk"
+                placeholder="Nhập tên quảng cáo"
               />
             </div>
             <div>
-              <Label htmlFor="branchId">Chi nhánh *</Label>
+              <Label htmlFor="type">Loại quảng cáo *</Label>
+              <Select
+                id="type"
+                value={formData.type}
+                onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as 'image' | 'video' | 'html' | 'playlist' }))}
+              >
+                <option value="image">Hình ảnh</option>
+                <option value="video">Video</option>
+                <option value="html">HTML</option>
+                <option value="playlist">Playlist</option>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="branchId">Chi nhánh</Label>
               <Input
                 id="branchId"
                 value={formData.branchId}
                 onChange={(e) => setFormData(prev => ({ ...prev, branchId: e.target.value }))}
-                placeholder="Nhập ID chi nhánh"
+                placeholder="Nhập ID chi nhánh (để trống cho tất cả)"
+              />
+            </div>
+            <div>
+              <Label htmlFor="startDate">Ngày bắt đầu</Label>
+              <Input
+                id="startDate"
+                type="date"
+                value={formData.startDate}
+                onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="endDate">Ngày kết thúc</Label>
+              <Input
+                id="endDate"
+                type="date"
+                value={formData.endDate}
+                onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
               />
             </div>
             <div>
@@ -430,11 +509,13 @@ const KiosksPage: React.FC = () => {
               <Select
                 id="status"
                 value={formData.status}
-                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'connected' | 'disconnected' | 'inactive' }))}
+                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'draft' | 'scheduled' | 'running' | 'paused' | 'ended' }))}
               >
-                <option value="disconnected">Chưa kết nối</option>
-                <option value="connected">Đã kết nối</option>
-                <option value="inactive">Không hoạt động</option>
+                <option value="draft">Bản nháp</option>
+                <option value="scheduled">Đã lên lịch</option>
+                <option value="running">Đang chạy</option>
+                <option value="paused">Tạm dừng</option>
+                <option value="ended">Đã kết thúc</option>
               </Select>
             </div>
             <div className="flex gap-2 pt-4">
@@ -457,34 +538,65 @@ const KiosksPage: React.FC = () => {
       <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Thông tin liên kết thiết bị</DialogTitle>
+            <DialogTitle>Thông tin quảng cáo</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="edit-code">Mã kiosk *</Label>
+              <Label htmlFor="edit-code">Mã quảng cáo *</Label>
               <Input
                 id="edit-code"
                 value={formData.code}
                 onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value }))}
-                placeholder="Nhập mã kiosk"
+                placeholder="Nhập mã quảng cáo"
               />
             </div>
             <div>
-              <Label htmlFor="edit-name">Tên kiosk *</Label>
+              <Label htmlFor="edit-name">Tên quảng cáo *</Label>
               <Input
                 id="edit-name"
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Nhập tên kiosk"
+                placeholder="Nhập tên quảng cáo"
               />
             </div>
             <div>
-              <Label htmlFor="edit-branchId">Chi nhánh *</Label>
+              <Label htmlFor="edit-type">Loại quảng cáo *</Label>
+              <Select
+                id="edit-type"
+                value={formData.type}
+                onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as 'image' | 'video' | 'html' | 'playlist' }))}
+              >
+                <option value="image">Hình ảnh</option>
+                <option value="video">Video</option>
+                <option value="html">HTML</option>
+                <option value="playlist">Playlist</option>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="edit-branchId">Chi nhánh</Label>
               <Input
                 id="edit-branchId"
                 value={formData.branchId}
                 onChange={(e) => setFormData(prev => ({ ...prev, branchId: e.target.value }))}
-                placeholder="Nhập ID chi nhánh"
+                placeholder="Nhập ID chi nhánh (để trống cho tất cả)"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-startDate">Ngày bắt đầu</Label>
+              <Input
+                id="edit-startDate"
+                type="date"
+                value={formData.startDate}
+                onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-endDate">Ngày kết thúc</Label>
+              <Input
+                id="edit-endDate"
+                type="date"
+                value={formData.endDate}
+                onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
               />
             </div>
             <div>
@@ -492,11 +604,13 @@ const KiosksPage: React.FC = () => {
               <Select
                 id="edit-status"
                 value={formData.status}
-                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'connected' | 'disconnected' | 'inactive' }))}
+                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'draft' | 'scheduled' | 'running' | 'paused' | 'ended' }))}
               >
-                <option value="disconnected">Chưa kết nối</option>
-                <option value="connected">Đã kết nối</option>
-                <option value="inactive">Không hoạt động</option>
+                <option value="draft">Bản nháp</option>
+                <option value="scheduled">Đã lên lịch</option>
+                <option value="running">Đang chạy</option>
+                <option value="paused">Tạm dừng</option>
+                <option value="ended">Đã kết thúc</option>
               </Select>
             </div>
             <div className="flex gap-2 pt-4">
@@ -515,53 +629,13 @@ const KiosksPage: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Connect Device Modal */}
-      <Dialog open={showConnectModal} onOpenChange={setShowConnectModal}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Kết nối thiết bị</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="text-center">
-              <div className="bg-gray-100 rounded-lg p-6 mb-4">
-                <div className="text-2xl font-mono font-bold text-gray-800">
-                  {connectionCode?.code || 'Đang tạo mã...'}
-                </div>
-                {connectionCode && (
-                  <div className="text-sm text-gray-500 mt-2">
-                    Mã hết hạn sau: {connectionCode.expiresIn} giây
-                  </div>
-                )}
-              </div>
-              <Button
-                variant="outline"
-                onClick={handleRefreshConnectionCode}
-                disabled={connectMutation.isPending}
-                className="mb-4"
-              >
-                <RefreshCcw className="h-4 w-4 mr-2" />
-                {connectMutation.isPending ? 'Đang tạo...' : 'Làm mới mã'}
-              </Button>
-            </div>
-            <div className="flex gap-2 pt-4">
-              <Button 
-                className="flex-1" 
-                onClick={() => setShowConnectModal(false)}
-              >
-                Đóng
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
       {/* Delete Confirmation */}
       <ConfirmDialog
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         onConfirm={confirmDelete}
         title="Xác nhận xóa"
-        message={`Bạn có chắc chắn muốn xóa kiosk "${deletingKiosk?.name}" này không?`}
+        message={`Bạn có chắc chắn muốn xóa quảng cáo "${deletingAd?.name}" này không?`}
         confirmText="Đồng ý"
         cancelText="Không"
         variant="destructive"
@@ -571,4 +645,4 @@ const KiosksPage: React.FC = () => {
   );
 };
 
-export default KiosksPage;
+export default AdsPage;

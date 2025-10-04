@@ -1,79 +1,80 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/Table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../../components/ui/DropdownMenu';
-import { Skeleton } from '../../components/ui/Skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/Dialog';
+import { Input } from '../../components/ui/Input';
+import { Label } from '../../components/ui/Label';
 import { Select } from '../../components/ui/Select';
-import { Search, Filter, Plus, MoreVertical, Edit, Trash2, User, Key, RefreshCcw } from '../../components/Icons';
-import { usersApi } from '../../services/api';
-import { useDebounce } from '../../hooks/useDebounce';
-import { UserRole, type User } from '../../types';
+import { SearchBar } from '../../components/ui/SearchBar';
+import { FilterSheet } from '../../components/ui/FilterSheet';
+import { FilterChips } from '../../components/ui/FilterChips';
+import { PaginationFooter } from '../../components/ui/PaginationFooter';
+import { EmptyState } from '../../components/ui/EmptyState';
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { MoreVertical, Edit, Trash2, Plus, Filter, Key } from '../../components/Icons';
+import { usersApi } from '../../services/users';
+import { useAuth } from '../../hooks/useAuth';
+import { User, UserFilter, UserRole } from '../../types';
 
 const UsersPage: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showFilterModal, setShowFilterModal] = useState(false);
-  const [filterRole, setFilterRole] = useState('');
-  const [appliedFilters, setAppliedFilters] = useState({ role: '' });
-  const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    role: '',
-    branch: ''
-  });
-  
+  const { canCreate, canEdit, canDelete } = useAuth();
   const queryClient = useQueryClient();
-  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  const { data: usersData, isLoading } = useQuery({
-    queryKey: ['users', currentPage, itemsPerPage, debouncedSearchTerm, appliedFilters],
+  // State management
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [search, setSearch] = useState('');
+  const [filters, setFilters] = useState<UserFilter>({});
+  const [showFilterSheet, setShowFilterSheet] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [deletingUser, setDeletingUser] = useState<User | null>(null);
+  const [resettingUser, setResettingUser] = useState<User | null>(null);
+
+  // Form data
+  const [formData, setFormData] = useState({
+    username: '',
+    fullName: '',
+    role: 'STAFF' as UserRole,
+    branchId: '',
+    status: 'active' as 'active' | 'inactive',
+  });
+
+  const [passwordData, setPasswordData] = useState({
+    newPassword: '',
+    confirmPassword: '',
+  });
+
+  // Fetch users
+  const { data: usersData, isLoading, error } = useQuery({
+    queryKey: ['users', page, limit, search, filters],
     queryFn: () => usersApi.getUsers({
-      page: currentPage,
-      limit: itemsPerPage,
-      q: debouncedSearchTerm,
-      role: appliedFilters.role
+      page,
+      limit,
+      q: search,
+      ...filters
     }),
   });
 
-  const deleteUserMutation = useMutation({
-    mutationFn: usersApi.deleteUser,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-    },
-  });
-
-  const assignPasswordMutation = useMutation({
-    mutationFn: usersApi.assignPassword,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-    },
-  });
-
-  const resetPasswordMutation = useMutation({
-    mutationFn: usersApi.resetPassword,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-    },
-  });
-
-  const createUserMutation = useMutation({
+  // Mutations
+  const createMutation = useMutation({
     mutationFn: usersApi.createUser,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
-      setShowAddModal(false);
+      setShowCreateModal(false);
       resetForm();
     },
   });
 
-  const updateUserMutation = useMutation({
-    mutationFn: usersApi.updateUser,
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<User> }) =>
+      usersApi.updateUser(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       setShowEditModal(false);
@@ -82,252 +83,305 @@ const UsersPage: React.FC = () => {
     },
   });
 
-  const handleEdit = (userId: string): void => {
-    const user = usersData?.data.find(u => u.id === userId);
-    if (user) {
-      setEditingUser(user);
-      setFormData({
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        branch: user.branch || ''
-      });
-      setShowEditModal(true);
-    }
-  };
+  const deleteMutation = useMutation({
+    mutationFn: usersApi.deleteUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      setShowDeleteConfirm(false);
+      setDeletingUser(null);
+    },
+  });
 
-  const resetForm = (): void => {
+  const resetPasswordMutation = useMutation({
+    mutationFn: ({ id, newPassword }: { id: string; newPassword: string }) =>
+      usersApi.resetPassword(id, newPassword),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      setShowResetPasswordModal(false);
+      setResettingUser(null);
+      setPasswordData({ newPassword: '', confirmPassword: '' });
+    },
+  });
+
+  // Helper functions
+  const resetForm = () => {
     setFormData({
-      name: '',
-      email: '',
-      role: '',
-      branch: ''
+      username: '',
+      fullName: '',
+      role: 'STAFF',
+      branchId: '',
+      status: 'active',
     });
   };
 
-  const handleDelete = async (userId: string): Promise<void> => {
-    if (window.confirm('Are you sure you want to delete this user?')) {
-      try {
-        await deleteUserMutation.mutateAsync(userId);
-      } catch (error) {
-        console.error('Delete failed:', error);
-      }
-    }
+  const handleCreate = () => {
+    if (!formData.username || !formData.fullName) return;
+    createMutation.mutate(formData);
   };
 
-  const handleAssignPassword = async (userId: string): Promise<void> => {
-    try {
-      await assignPasswordMutation.mutateAsync(userId);
-    } catch (error) {
-      console.error('Assign password failed:', error);
-    }
+  const handleEdit = (user: User) => {
+    setEditingUser(user);
+    setFormData({
+      username: user.username,
+      fullName: user.fullName,
+      role: user.role,
+      branchId: user.branchId || '',
+      status: user.status,
+    });
+    setShowEditModal(true);
   };
 
-  const handleResetPassword = async (userId: string): Promise<void> => {
-    if (window.confirm('Are you sure you want to reset this user\'s password?')) {
-      try {
-        await resetPasswordMutation.mutateAsync(userId);
-      } catch (error) {
-        console.error('Reset password failed:', error);
-      }
-    }
-  };
-
-  const handleAddUser = (): void => {
-    resetForm();
-    setShowAddModal(true);
-  };
-
-  const handleSubmitAdd = (): void => {
-    if (!formData.name || !formData.email || !formData.role) {
-      alert('Please fill in required fields');
-      return;
-    }
-    
-    createUserMutation.mutate({
-      name: formData.name,
-      email: formData.email,
-      role: formData.role as UserRole,
-      branch: formData.branch || undefined
+  const handleUpdate = () => {
+    if (!editingUser || !formData.username || !formData.fullName) return;
+    updateMutation.mutate({
+      id: editingUser.id,
+      data: formData
     });
   };
 
-  const handleSubmitEdit = (): void => {
-    if (!formData.name || !formData.email || !formData.role || !editingUser) {
-      alert('Please fill in required fields');
-      return;
+  const handleDelete = (user: User) => {
+    setDeletingUser(user);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = () => {
+    if (deletingUser) {
+      deleteMutation.mutate(deletingUser.id);
     }
-    
-    updateUserMutation.mutate({
-      ...editingUser,
-      name: formData.name,
-      email: formData.email,
-      role: formData.role as UserRole,
-      branch: formData.branch || undefined
-    });
   };
 
-  const handleFilterData = (): void => {
-    setShowFilterModal(true);
+  const handleResetPassword = (user: User) => {
+    setResettingUser(user);
+    setShowResetPasswordModal(true);
   };
 
-  const handleApplyFilters = (): void => {
-    setAppliedFilters({ role: filterRole });
-    setCurrentPage(1);
-    setShowFilterModal(false);
+  const confirmResetPassword = () => {
+    if (resettingUser && passwordData.newPassword) {
+      resetPasswordMutation.mutate({
+        id: resettingUser.id,
+        newPassword: passwordData.newPassword
+      });
+    }
   };
 
-  const handleClearFilters = (): void => {
-    setFilterRole('');
-    setAppliedFilters({ role: '' });
-    setCurrentPage(1);
+  const handleApplyFilters = (newFilters: Record<string, string>) => {
+    setFilters(newFilters as UserFilter);
+    setPage(1);
   };
 
-  const getRoleText = (role: UserRole): string => {
+  const handleRemoveFilter = (key: string) => {
+    const newFilters = { ...filters };
+    delete newFilters[key as keyof UserFilter];
+    setFilters(newFilters);
+    setPage(1);
+  };
+
+  const handleClearFilters = () => {
+    setFilters({});
+    setPage(1);
+  };
+
+  // Filter chips
+  const filterChips = Object.entries(filters)
+    .filter(([_, value]) => value)
+    .map(([key, value]) => ({
+      key,
+      label: key === 'branchId' ? 'Chi nhánh' :
+             key === 'role' ? 'Quyền hạn' :
+             key === 'status' ? 'Trạng thái' : key,
+      value
+    }));
+
+  // Filter fields for FilterSheet
+  const filterFields = [
+    {
+      key: 'branchId',
+      label: 'Chi nhánh',
+      type: 'text' as const,
+    },
+    {
+      key: 'role',
+      label: 'Quyền hạn',
+      type: 'select' as const,
+      options: [
+        { value: 'SUPER_ADMIN', label: 'Super Admin' },
+        { value: 'BRANCH_ADMIN', label: 'Branch Admin' },
+        { value: 'STAFF', label: 'Staff' },
+      ],
+    },
+    {
+      key: 'status',
+      label: 'Trạng thái',
+      type: 'select' as const,
+      options: [
+        { value: 'active', label: 'Hoạt động' },
+        { value: 'inactive', label: 'Tạm dừng' },
+      ],
+    },
+  ];
+
+  const getRoleLabel = (role: UserRole) => {
     switch (role) {
-      case UserRole.ADMIN:
-        return 'Administrator';
-      case UserRole.STAFF:
-        return 'Staff';
-      case UserRole.VIEWER:
-        return 'Viewer';
-      default:
-        return role;
+      case 'SUPER_ADMIN': return 'Super Admin';
+      case 'BRANCH_ADMIN': return 'Branch Admin';
+      case 'STAFF': return 'Staff';
+      default: return role;
     }
   };
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="text-center py-12">
+          <h3 className="text-lg font-medium text-red-600 mb-2">Lỗi tải dữ liệu</h3>
+          <p className="text-gray-500 mb-4">Không thể tải danh sách người dùng</p>
+          <Button onClick={() => window.location.reload()}>
+            Thử lại
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">User Management</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Phân quyền</h1>
       </div>
 
-      {/* Search and Action Bar */}
+      {/* Search and Actions */}
       <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            type="text"
-            placeholder="Search by username, full name..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 w-full"
-          />
-        </div>
+        <SearchBar
+          value={search}
+          onChange={setSearch}
+          placeholder="Tên đăng nhập/Họ tên"
+        />
         
-            <div className="flex gap-2">
-              <Button 
-                className="bg-green-600 hover:bg-green-700 text-white"
-                onClick={handleFilterData}
-              >
-                <Filter className="h-4 w-4 mr-2" />
-                FILTER DATA
-              </Button>
-              <Button 
-                className="bg-green-600 hover:bg-green-700 text-white"
-                onClick={handleAddUser}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                ADD USER
-              </Button>
-            </div>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline"
+            onClick={() => setShowFilterSheet(true)}
+          >
+            <Filter className="h-4 w-4 mr-2" />
+            Lọc dữ liệu
+          </Button>
+          
+          {canCreate('users') && (
+            <Button onClick={() => setShowCreateModal(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Thêm người dùng
+            </Button>
+          )}
+        </div>
       </div>
+
+      {/* Filter Chips */}
+      <FilterChips
+        chips={filterChips}
+        onRemove={handleRemoveFilter}
+        onClearAll={handleClearFilters}
+      />
 
       {/* Table */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow className="bg-gray-50">
-              <TableHead className="font-semibold text-gray-900">Username</TableHead>
-              <TableHead className="font-semibold text-gray-900">Employee Name</TableHead>
-              <TableHead className="font-semibold text-gray-900">Branch</TableHead>
-              <TableHead className="font-semibold text-gray-900">Update Time</TableHead>
-              <TableHead className="font-semibold text-gray-900">Status</TableHead>
+              <TableHead className="font-semibold text-gray-900">Tên đăng nhập</TableHead>
+              <TableHead className="font-semibold text-gray-900">Họ tên</TableHead>
+              <TableHead className="font-semibold text-gray-900">Quyền hạn</TableHead>
+              <TableHead className="font-semibold text-gray-900">Chi nhánh</TableHead>
+              <TableHead className="font-semibold text-gray-900">Trạng thái</TableHead>
+              <TableHead className="font-semibold text-gray-900">Thao tác</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              Array.from({ length: itemsPerPage }).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-48" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-40" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-20" /></TableCell>
-                </TableRow>
-              ))
-            ) : usersData?.data.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center">No users found.</TableCell>
+                <TableCell colSpan={6}>
+                  <LoadingSkeleton rows={5} columns={6} />
+                </TableCell>
+              </TableRow>
+            ) : usersData?.items.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6}>
+                  <EmptyState
+                    title="Không có người dùng nào"
+                    description="Chưa có người dùng nào được tìm thấy."
+                    actionLabel="Thêm người dùng"
+                    onAction={() => setShowCreateModal(true)}
+                    canCreate={canCreate('users')}
+                  />
+                </TableCell>
               </TableRow>
             ) : (
-              usersData?.data.map((user) => (
-                <TableRow key={user.id} className="hover:bg-gray-50">
+              usersData?.items.map((user) => (
+                <TableRow 
+                  key={user.id} 
+                  className="hover:bg-gray-50 cursor-pointer"
+                  onDoubleClick={() => canEdit('users') && handleEdit(user)}
+                >
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-gray-500" />
-                      <span className="font-medium">{user.email.split('@')[0]}</span>
+                    <div className="font-medium">{user.username}</div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="font-medium">{user.fullName}</div>
+                  </TableCell>
+                  <TableCell>
+                    <span className={`px-2 py-1 text-xs rounded-full ${
+                      user.role === 'SUPER_ADMIN' ? 'bg-purple-100 text-purple-800' :
+                      user.role === 'BRANCH_ADMIN' ? 'bg-blue-100 text-blue-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {getRoleLabel(user.role)}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm text-gray-600">
+                      {user.branchId || 'Không có'}
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div>
-                      <div className="font-medium">{user.name}</div>
-                      <div className="text-sm text-gray-500">Role: {getRoleText(user.role)}</div>
-                    </div>
+                    <span className={`px-2 py-1 text-xs rounded-full ${
+                      user.status === 'active' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {user.status === 'active' ? 'Hoạt động' : 'Tạm dừng'}
+                    </span>
                   </TableCell>
                   <TableCell>
-                    <div>
-                      {user.branch ? (
-                        <>
-                          <div className="font-medium">{user.branch}</div>
-                          {user.address && (
-                            <div className="text-sm text-gray-500">{user.address}</div>
-                          )}
-                        </>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{user.updateTime}</div>
-                      <div className="text-sm text-gray-500">{user.updateHour}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center justify-between">
-                      <span className="text-green-600 font-medium">Active</span>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEdit(user.id)}>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {canEdit('users') && (
+                          <DropdownMenuItem onClick={() => handleEdit(user)}>
                             <Edit className="h-4 w-4 mr-2" />
-                            Edit
+                            Chỉnh sửa
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleAssignPassword(user.id)}>
+                        )}
+                        {canEdit('users') && (
+                          <DropdownMenuItem onClick={() => handleResetPassword(user)}>
                             <Key className="h-4 w-4 mr-2" />
-                            Assign Password
+                            Cấp mật khẩu mới
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleResetPassword(user.id)}>
-                            <RefreshCcw className="h-4 w-4 mr-2" />
-                            Reset Password
-                          </DropdownMenuItem>
+                        )}
+                        {canDelete('users') && (
                           <DropdownMenuItem 
-                            onClick={() => handleDelete(user.id)}
+                            onClick={() => handleDelete(user)}
                             className="text-red-600"
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
-                            Delete User
+                            Xóa người dùng
                           </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))
@@ -337,238 +391,229 @@ const UsersPage: React.FC = () => {
       </div>
 
       {/* Pagination */}
-      <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-700">Total: {usersData?.total || 0}</span>
-          <select 
-            value={itemsPerPage} 
-            onChange={(e) => {
-              setItemsPerPage(Number(e.target.value));
-              setCurrentPage(1);
-            }}
-            className="px-3 py-1 border border-gray-300 rounded text-sm"
-          >
-            <option value={10}>10/page</option>
-            <option value={20}>20/page</option>
-            <option value={50}>50/page</option>
-          </select>
-        </div>
+      {usersData && usersData.total > 0 && (
+        <PaginationFooter
+          total={usersData.total}
+          page={page}
+          limit={limit}
+          onPageChange={setPage}
+          onLimitChange={setLimit}
+          isLoading={isLoading}
+        />
+      )}
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-            disabled={currentPage === 1 || isLoading}
-          >
-            ←
-          </Button>
-          
-          {Array.from({ length: Math.min(5, Math.ceil((usersData?.total || 0) / itemsPerPage)) }, (_, i) => {
-            const pageNum = i + 1;
-            const totalPages = Math.ceil((usersData?.total || 0) / itemsPerPage);
-            return (
-              <Button
-                key={pageNum}
-                variant={currentPage === pageNum ? "default" : "outline"}
-                size="sm"
-                onClick={() => setCurrentPage(pageNum)}
-                className={currentPage === pageNum ? "bg-blue-600 text-white" : ""}
-                disabled={isLoading}
-              >
-                {pageNum}
-              </Button>
-            );
-          })}
-          
-          {Math.ceil((usersData?.total || 0) / itemsPerPage) > 5 && (
-            <>
-              <span className="px-2">...</span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(Math.ceil((usersData?.total || 0) / itemsPerPage))}
-                disabled={isLoading}
-              >
-                {Math.ceil((usersData?.total || 0) / itemsPerPage)}
-              </Button>
-            </>
-          )}
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(prev => Math.min(Math.ceil((usersData?.total || 0) / itemsPerPage), prev + 1))}
-            disabled={currentPage === Math.ceil((usersData?.total || 0) / itemsPerPage) || isLoading}
-          >
-            →
-          </Button>
-        </div>
+      {/* Filter Sheet */}
+      <FilterSheet
+        isOpen={showFilterSheet}
+        onClose={() => setShowFilterSheet(false)}
+        onApply={handleApplyFilters}
+        onReset={handleClearFilters}
+        title="Lọc dữ liệu"
+        fields={filterFields}
+        appliedFilters={filters}
+      />
 
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-700">Jump to</span>
-          <Input
-            type="number"
-            min="1"
-            max={Math.ceil((usersData?.total || 0) / itemsPerPage)}
-            value={currentPage}
-            onChange={(e) => setCurrentPage(Number(e.target.value))}
-            className="w-16 h-8 text-center"
-          />
-        </div>
-      </div>
-
-      {/* Add User Modal */}
-      <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
+      {/* Create Modal */}
+      <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Add New User</DialogTitle>
+            <DialogTitle>Tạo người dùng</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Full Name *</label>
-              <Input 
-                placeholder="Enter full name" 
-                value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              <Label htmlFor="username">Tên đăng nhập *</Label>
+              <Input
+                id="username"
+                value={formData.username}
+                onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
+                placeholder="Nhập tên đăng nhập"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Email *</label>
-              <Input 
-                placeholder="Enter email address" 
-                value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+              <Label htmlFor="fullName">Họ tên *</Label>
+              <Input
+                id="fullName"
+                value={formData.fullName}
+                onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
+                placeholder="Nhập họ tên"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Role *</label>
+              <Label htmlFor="role">Quyền hạn *</Label>
               <Select
+                id="role"
                 value={formData.role}
-                onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
+                onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value as UserRole }))}
               >
-                <option value="">Select role</option>
-                <option value="ADMIN">Administrator</option>
                 <option value="STAFF">Staff</option>
-                <option value="VIEWER">Viewer</option>
+                <option value="BRANCH_ADMIN">Branch Admin</option>
+                <option value="SUPER_ADMIN">Super Admin</option>
               </Select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Branch</label>
-              <Input 
-                placeholder="Enter branch name" 
-                value={formData.branch}
-                onChange={(e) => setFormData(prev => ({ ...prev, branch: e.target.value }))}
+              <Label htmlFor="branchId">Chi nhánh</Label>
+              <Input
+                id="branchId"
+                value={formData.branchId}
+                onChange={(e) => setFormData(prev => ({ ...prev, branchId: e.target.value }))}
+                placeholder="Nhập ID chi nhánh"
               />
+            </div>
+            <div>
+              <Label htmlFor="status">Trạng thái *</Label>
+              <Select
+                id="status"
+                value={formData.status}
+                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'active' | 'inactive' }))}
+              >
+                <option value="active">Hoạt động</option>
+                <option value="inactive">Tạm dừng</option>
+              </Select>
             </div>
             <div className="flex gap-2 pt-4">
               <Button 
                 className="flex-1" 
-                onClick={handleSubmitAdd}
-                disabled={createUserMutation.isPending}
+                onClick={handleCreate}
+                disabled={createMutation.isPending}
               >
-                {createUserMutation.isPending ? 'Adding...' : 'Add User'}
+                {createMutation.isPending ? 'Đang tạo...' : 'Tạo mới'}
               </Button>
-              <Button variant="outline" onClick={() => setShowAddModal(false)}>
-                Cancel
+              <Button variant="outline" onClick={() => setShowCreateModal(false)}>
+                Hủy
               </Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Edit User Modal */}
+      {/* Edit Modal */}
       <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
+            <DialogTitle>Thông tin người dùng</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Full Name *</label>
-              <Input 
-                placeholder="Enter full name" 
-                value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              <Label htmlFor="edit-username">Tên đăng nhập *</Label>
+              <Input
+                id="edit-username"
+                value={formData.username}
+                onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
+                placeholder="Nhập tên đăng nhập"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Email *</label>
-              <Input 
-                placeholder="Enter email address" 
-                value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+              <Label htmlFor="edit-fullName">Họ tên *</Label>
+              <Input
+                id="edit-fullName"
+                value={formData.fullName}
+                onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
+                placeholder="Nhập họ tên"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Role *</label>
+              <Label htmlFor="edit-role">Quyền hạn *</Label>
               <Select
+                id="edit-role"
                 value={formData.role}
-                onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
+                onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value as UserRole }))}
               >
-                <option value="">Select role</option>
-                <option value="ADMIN">Administrator</option>
                 <option value="STAFF">Staff</option>
-                <option value="VIEWER">Viewer</option>
+                <option value="BRANCH_ADMIN">Branch Admin</option>
+                <option value="SUPER_ADMIN">Super Admin</option>
               </Select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Branch</label>
-              <Input 
-                placeholder="Enter branch name" 
-                value={formData.branch}
-                onChange={(e) => setFormData(prev => ({ ...prev, branch: e.target.value }))}
+              <Label htmlFor="edit-branchId">Chi nhánh</Label>
+              <Input
+                id="edit-branchId"
+                value={formData.branchId}
+                onChange={(e) => setFormData(prev => ({ ...prev, branchId: e.target.value }))}
+                placeholder="Nhập ID chi nhánh"
               />
+            </div>
+            <div>
+              <Label htmlFor="edit-status">Trạng thái *</Label>
+              <Select
+                id="edit-status"
+                value={formData.status}
+                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'active' | 'inactive' }))}
+              >
+                <option value="active">Hoạt động</option>
+                <option value="inactive">Tạm dừng</option>
+              </Select>
             </div>
             <div className="flex gap-2 pt-4">
               <Button 
                 className="flex-1" 
-                onClick={handleSubmitEdit}
-                disabled={updateUserMutation.isPending}
+                onClick={handleUpdate}
+                disabled={updateMutation.isPending}
               >
-                {updateUserMutation.isPending ? 'Updating...' : 'Update User'}
+                {updateMutation.isPending ? 'Đang lưu...' : 'Lưu'}
               </Button>
               <Button variant="outline" onClick={() => setShowEditModal(false)}>
-                Cancel
+                Hủy
               </Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Filter Modal */}
-      <Dialog open={showFilterModal} onOpenChange={setShowFilterModal}>
+      {/* Reset Password Modal */}
+      <Dialog open={showResetPasswordModal} onOpenChange={setShowResetPasswordModal}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Filter Users</DialogTitle>
+            <DialogTitle>Cấp mật khẩu mới</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Role</label>
-              <Select
-                value={filterRole}
-                onChange={(e) => setFilterRole(e.target.value)}
-              >
-                <option value="">All Roles</option>
-                <option value="ADMIN">Administrator</option>
-                <option value="STAFF">Staff</option>
-                <option value="VIEWER">Viewer</option>
-              </Select>
+              <Label htmlFor="newPassword">Mật khẩu mới *</Label>
+              <Input
+                id="newPassword"
+                type="password"
+                value={passwordData.newPassword}
+                onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
+                placeholder="Nhập mật khẩu mới"
+              />
+            </div>
+            <div>
+              <Label htmlFor="confirmPassword">Xác nhận mật khẩu *</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={passwordData.confirmPassword}
+                onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                placeholder="Nhập lại mật khẩu mới"
+              />
             </div>
             <div className="flex gap-2 pt-4">
-              <Button className="flex-1" onClick={handleApplyFilters}>
-                Apply Filters
+              <Button 
+                className="flex-1" 
+                onClick={confirmResetPassword}
+                disabled={resetPasswordMutation.isPending || passwordData.newPassword !== passwordData.confirmPassword}
+              >
+                {resetPasswordMutation.isPending ? 'Đang cập nhật...' : 'Đồng ý'}
               </Button>
-              <Button variant="outline" onClick={handleClearFilters}>
-                Clear
-              </Button>
-              <Button variant="outline" onClick={() => setShowFilterModal(false)}>
-                Cancel
+              <Button variant="outline" onClick={() => setShowResetPasswordModal(false)}>
+                Đóng
               </Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={confirmDelete}
+        title="Xác nhận xóa"
+        message={`Bạn có chắc chắn muốn xóa người dùng "${deletingUser?.fullName}" này không?`}
+        confirmText="Đồng ý"
+        cancelText="Không"
+        variant="destructive"
+        isLoading={deleteMutation.isPending}
+      />
     </div>
   );
 };

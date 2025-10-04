@@ -37,19 +37,19 @@ const Header: React.FC<HeaderProps> = ({ setSidebarOpen }) => {
 
   const formatDate = (date: Date): string => {
     const days = [
-      "Sunday",
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
+      "Chủ nhật",
+      "Thứ hai", 
+      "Thứ ba",
+      "Thứ tư",
+      "Thứ năm",
+      "Thứ sáu",
+      "Thứ bảy",
     ];
     const dayName = days[date.getDay()];
     const day = date.getDate().toString().padStart(2, "0");
     const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const year = date.getFullYear();
-    return `${dayName}, ${month}/${day}/${year}`;
+    return `${dayName}, ${day}/${month}/${year}`;
   };
 
   const handleLogout = (): void => {
@@ -75,30 +75,26 @@ const Header: React.FC<HeaderProps> = ({ setSidebarOpen }) => {
             <span className="sr-only">Open sidebar</span>
           </Button>
         </div>
+        <div className="hidden lg:flex items-center gap-3">
+          <h1 className="text-xl font-bold text-black">Portal Admin</h1>
+          <span className="text-sm text-gray-500">
+            {formatTime(currentTime)} | {formatDate(currentTime)}
+          </span>
+        </div>
       </div>
 
-      {/* Right side - User info and refresh */}
+      {/* Right side - User info */}
       <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleRefresh}
-          className="h-8 w-8"
-        >
-          <RefreshCw className="h-4 w-4" />
-          <span className="sr-only">Refresh</span>
-        </Button>
-
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-            {user?.name?.charAt(0)?.toUpperCase() || "A"}
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+            <span className="text-sm font-medium text-gray-600">👤</span>
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-medium text-gray-900">
-              {user?.name || "Admin 01"}
+            <span className="text-sm font-medium text-black">
+              {user?.fullName || "Admin 01"}
             </span>
             <span className="text-xs text-gray-500">
-              {user?.email || "admin3"}
+              {user?.username || "admin3"}
             </span>
           </div>
         </div>
@@ -106,18 +102,12 @@ const Header: React.FC<HeaderProps> = ({ setSidebarOpen }) => {
           variant="ghost"
           size="icon"
           onClick={handleLogout}
-          className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+          className="h-8 w-8 text-gray-600 hover:text-gray-700 hover:bg-gray-50"
           title="Logout"
         >
           <LogOut className="h-4 w-4" />
           <span className="sr-only">Logout</span>
         </Button>
-
-        {/* 
-          Although not visible, this still occupies UI space.
-          To avoid occupying space when not shown, render nothing.
-        */}
-        
       </div>
     </header>
   );

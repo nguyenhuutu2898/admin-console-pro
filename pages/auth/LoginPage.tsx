@@ -6,7 +6,7 @@ import * as z from 'zod';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuthStore } from '../../store/authStore';
-import { authApi } from '../../services/api';
+import { mockApi } from '../../services/mock-api';
 
 import { Button } from '../../components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card';
@@ -35,9 +35,9 @@ const LoginPage: React.FC = () => {
 
   const onSubmit = async (data: LoginFormValues) => {
     try {
-      const { user, token } = await authApi.login(data.email, data.password);
+      const { user, token } = await mockApi.login(data.email, data.password);
       login(user, token);
-      navigate('/dashboard');
+      navigate('/branches');
     } catch (error) {
       // Toast is handled in the mock API
       console.error('Login failed:', error);

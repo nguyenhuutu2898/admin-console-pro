@@ -1,127 +1,155 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/Table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../../components/ui/DropdownMenu';
-import { Skeleton } from '../../components/ui/Skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/Dialog';
-import { Select } from '../../components/ui/Select';
-import { Search, Filter, Plus, MoreVertical, Edit, Trash2, Receipt } from '../../components/Icons';
-import { transactionTypesApi } from '../../services/api';
-import { useDebounce } from '../../hooks/useDebounce';
-import { type TransactionType } from '../../types';
+import { Input } from '../../components/ui/Input';
+import { Label } from '../../components/ui/Label';
+import { SearchBar } from '../../components/ui/SearchBar';
+import { FilterSheet } from '../../components/ui/FilterSheet';
+import { FilterChips } from '../../components/ui/FilterChips';
+import { PaginationFooter } from '../../components/ui/PaginationFooter';
+import { EmptyState } from '../../components/ui/EmptyState';
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
+import { MoreVertical, Edit, Filter, Receipt } from '../../components/Icons';
+import { transactionTypesApi } from '../../services/transactionTypes';
+import { useAuth } from '../../hooks/useAuth';
+import { TransactionType } from '../../types';
 
 const TransactionTypesPage: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showFilterModal, setShowFilterModal] = useState(false);
-  const [filterStatus, setFilterStatus] = useState('');
-  const [appliedFilters, setAppliedFilters] = useState({ status: '' });
-  
+  const { canEdit } = useAuth();
   const queryClient = useQueryClient();
-  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  const { data: transactionTypesData, isLoading } = useQuery({
-    queryKey: ['transactionTypes', currentPage, itemsPerPage, debouncedSearchTerm, appliedFilters],
+  // State management
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [search, setSearch] = useState('');
+  const [showFilterSheet, setShowFilterSheet] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingTransactionType, setEditingTransactionType] = useState<TransactionType | null>(null);
+
+  // Form data
+  const [formData, setFormData] = useState({
+    code: '',
+    name: '',
+    description: '',
+    status: 'active' as 'active' | 'inactive',
+  });
+
+  // Fetch transaction types
+  const { data: transactionTypesData, isLoading, error } = useQuery({
+    queryKey: ['transaction-types', page, limit, search],
     queryFn: () => transactionTypesApi.getTransactionTypes({
-      page: currentPage,
-      limit: itemsPerPage,
-      q: debouncedSearchTerm,
-      status: appliedFilters.status
+      page,
+      limit,
+      q: search,
     }),
   });
 
-  const deleteTransactionTypeMutation = useMutation({
-    mutationFn: transactionTypesApi.deleteTransactionType,
+  // Mutations
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<TransactionType> }) =>
+      transactionTypesApi.updateTransactionType(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactionTypes'] });
+      queryClient.invalidateQueries({ queryKey: ['transaction-types'] });
+      setShowEditModal(false);
+      setEditingTransactionType(null);
+      resetForm();
     },
   });
 
-  const handleEdit = (transactionTypeId: string): void => {
-    console.log('Edit transaction type:', transactionTypeId);
-    // TODO: Implement edit transaction type modal
+  // Helper functions
+  const resetForm = () => {
+    setFormData({
+      code: '',
+      name: '',
+      description: '',
+      status: 'active',
+    });
   };
 
-  const handleDelete = async (transactionTypeId: string): Promise<void> => {
-    if (window.confirm('Are you sure you want to delete this transaction type?')) {
-      try {
-        await deleteTransactionTypeMutation.mutateAsync(transactionTypeId);
-      } catch (error) {
-        console.error('Delete failed:', error);
-      }
-    }
+  const handleEdit = (transactionType: TransactionType) => {
+    setEditingTransactionType(transactionType);
+    setFormData({
+      code: transactionType.code,
+      name: transactionType.name,
+      description: transactionType.description || '',
+      status: transactionType.status || 'active',
+    });
+    setShowEditModal(true);
   };
 
-  const handleAddTransactionType = (): void => {
-    setShowAddModal(true);
+  const handleUpdate = () => {
+    if (!editingTransactionType || !formData.code || !formData.name) return;
+    updateMutation.mutate({
+      id: editingTransactionType.id,
+      data: formData
+    });
   };
 
-  const handleFilterData = (): void => {
-    setShowFilterModal(true);
+  const handleApplyFilters = (newFilters: Record<string, string>) => {
+    // For transaction types, we only have status filter
+    setPage(1);
   };
 
-  const handleApplyFilters = (): void => {
-    setAppliedFilters({ status: filterStatus });
-    setCurrentPage(1);
-    setShowFilterModal(false);
+  const handleRemoveFilter = (key: string) => {
+    setPage(1);
   };
 
-  const handleClearFilters = (): void => {
-    setFilterStatus('');
-    setAppliedFilters({ status: '' });
-    setCurrentPage(1);
+  const handleClearFilters = () => {
+    setPage(1);
   };
 
-  const getStatusBadge = (isActive: boolean) => {
+  // Filter fields for FilterSheet (minimal for transaction types)
+  const filterFields = [
+    {
+      key: 'status',
+      label: 'Trạng thái',
+      type: 'select' as const,
+      options: [
+        { value: 'active', label: 'Hoạt động' },
+        { value: 'inactive', label: 'Không hoạt động' },
+      ],
+    },
+  ];
+
+  if (error) {
     return (
-      <span className={`px-2 py-1 text-xs rounded-full ${
-        isActive 
-          ? 'bg-green-100 text-green-800' 
-          : 'bg-red-100 text-red-800'
-      }`}>
-        {isActive ? 'Active' : 'Inactive'}
-      </span>
+      <div className="p-6">
+        <div className="text-center py-12">
+          <h3 className="text-lg font-medium text-red-600 mb-2">Lỗi tải dữ liệu</h3>
+          <p className="text-gray-500 mb-4">Không thể tải danh sách loại giao dịch</p>
+          <Button onClick={() => window.location.reload()}>
+            Thử lại
+          </Button>
+        </div>
+      </div>
     );
-  };
+  }
 
   return (
     <div className="p-6">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Transaction Types Management</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Loại giao dịch</h1>
       </div>
 
-      {/* Search and Action Bar */}
+      {/* Search and Actions */}
       <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            type="text"
-            placeholder="Search transaction types..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 w-full"
-          />
-        </div>
+        <SearchBar
+          value={search}
+          onChange={setSearch}
+          placeholder="Mã giao dịch/Tên giao dịch"
+        />
         
         <div className="flex gap-2">
           <Button 
-            className="bg-green-600 hover:bg-green-700 text-white"
-            onClick={handleFilterData}
+            variant="outline"
+            onClick={() => setShowFilterSheet(true)}
           >
             <Filter className="h-4 w-4 mr-2" />
-            FILTER DATA
-          </Button>
-          <Button 
-            className="bg-green-600 hover:bg-green-700 text-white"
-            onClick={handleAddTransactionType}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            ADD TRANSACTION TYPE
+            Lọc dữ liệu
           </Button>
         </div>
       </div>
@@ -131,80 +159,72 @@ const TransactionTypesPage: React.FC = () => {
         <Table>
           <TableHeader>
             <TableRow className="bg-gray-50">
-              <TableHead className="font-semibold text-gray-900">Name</TableHead>
-              <TableHead className="font-semibold text-gray-900">Code</TableHead>
-              <TableHead className="font-semibold text-gray-900">Description</TableHead>
-              <TableHead className="font-semibold text-gray-900">Status</TableHead>
-              <TableHead className="font-semibold text-gray-900">Created At</TableHead>
-              <TableHead className="font-semibold text-gray-900">Actions</TableHead>
+              <TableHead className="font-semibold text-gray-900">Mã giao dịch</TableHead>
+              <TableHead className="font-semibold text-gray-900">Tên giao dịch</TableHead>
+              <TableHead className="font-semibold text-gray-900">Mô tả</TableHead>
+              <TableHead className="font-semibold text-gray-900">Trạng thái</TableHead>
+              <TableHead className="font-semibold text-gray-900">Thao tác</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              Array.from({ length: itemsPerPage }).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-48" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-20" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-20" /></TableCell>
-                </TableRow>
-              ))
-            ) : transactionTypesData?.data.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center">No transaction types found.</TableCell>
+                <TableCell colSpan={5}>
+                  <LoadingSkeleton rows={5} columns={5} />
+                </TableCell>
+              </TableRow>
+            ) : transactionTypesData?.items.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5}>
+                  <EmptyState
+                    title="Không có loại giao dịch nào"
+                    description="Chưa có loại giao dịch nào được tìm thấy."
+                  />
+                </TableCell>
               </TableRow>
             ) : (
-              transactionTypesData?.data.map((transactionType) => (
-                <TableRow key={transactionType.id} className="hover:bg-gray-50">
+              transactionTypesData?.items.map((transactionType) => (
+                <TableRow 
+                  key={transactionType.id} 
+                  className="hover:bg-gray-50 cursor-pointer"
+                  onDoubleClick={() => canEdit('transaction-types') && handleEdit(transactionType)}
+                >
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Receipt className="h-4 w-4 text-gray-500" />
-                      <span className="font-medium">{transactionType.name}</span>
-                    </div>
+                    <div className="font-medium">{transactionType.code}</div>
                   </TableCell>
                   <TableCell>
-                    <div className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
-                      {transactionType.code}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm text-gray-600 max-w-xs truncate">
-                      {transactionType.description || '-'}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {getStatusBadge(transactionType.isActive)}
+                    <div className="font-medium">{transactionType.name}</div>
                   </TableCell>
                   <TableCell>
                     <div className="text-sm text-gray-600">
-                      {new Date(transactionType.createdAt).toLocaleDateString()}
+                      {transactionType.description || 'Không có mô tả'}
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEdit(transactionType.id)}>
+                    <span className={`px-2 py-1 text-xs rounded-full ${
+                      transactionType.status === 'active' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {transactionType.status === 'active' ? 'Hoạt động' : 'Không hoạt động'}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {canEdit('transaction-types') && (
+                          <DropdownMenuItem onClick={() => handleEdit(transactionType)}>
                             <Edit className="h-4 w-4 mr-2" />
-                            Edit
+                            Chỉnh sửa
                           </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleDelete(transactionType.id)}
-                            className="text-red-600"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete Transaction Type
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))
@@ -214,144 +234,84 @@ const TransactionTypesPage: React.FC = () => {
       </div>
 
       {/* Pagination */}
-      <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-700">Total: {transactionTypesData?.total || 0}</span>
-          <select 
-            value={itemsPerPage} 
-            onChange={(e) => {
-              setItemsPerPage(Number(e.target.value));
-              setCurrentPage(1);
-            }}
-            className="px-3 py-1 border border-gray-300 rounded text-sm"
-          >
-            <option value={10}>10/page</option>
-            <option value={20}>20/page</option>
-            <option value={50}>50/page</option>
-          </select>
-        </div>
+      {transactionTypesData && transactionTypesData.total > 0 && (
+        <PaginationFooter
+          total={transactionTypesData.total}
+          page={page}
+          limit={limit}
+          onPageChange={setPage}
+          onLimitChange={setLimit}
+          isLoading={isLoading}
+        />
+      )}
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-            disabled={currentPage === 1 || isLoading}
-          >
-            ←
-          </Button>
-          
-          {Array.from({ length: Math.min(5, Math.ceil((transactionTypesData?.total || 0) / itemsPerPage)) }, (_, i) => {
-            const pageNum = i + 1;
-            return (
-              <Button
-                key={pageNum}
-                variant={currentPage === pageNum ? "default" : "outline"}
-                size="sm"
-                onClick={() => setCurrentPage(pageNum)}
-                className={currentPage === pageNum ? "bg-blue-600 text-white" : ""}
-                disabled={isLoading}
-              >
-                {pageNum}
-              </Button>
-            );
-          })}
-          
-          {Math.ceil((transactionTypesData?.total || 0) / itemsPerPage) > 5 && (
-            <>
-              <span className="px-2">...</span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(Math.ceil((transactionTypesData?.total || 0) / itemsPerPage))}
-                disabled={isLoading}
-              >
-                {Math.ceil((transactionTypesData?.total || 0) / itemsPerPage)}
-              </Button>
-            </>
-          )}
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(prev => Math.min(Math.ceil((transactionTypesData?.total || 0) / itemsPerPage), prev + 1))}
-            disabled={currentPage === Math.ceil((transactionTypesData?.total || 0) / itemsPerPage) || isLoading}
-          >
-            →
-          </Button>
-        </div>
+      {/* Filter Sheet */}
+      <FilterSheet
+        isOpen={showFilterSheet}
+        onClose={() => setShowFilterSheet(false)}
+        onApply={handleApplyFilters}
+        onReset={handleClearFilters}
+        title="Lọc dữ liệu"
+        fields={filterFields}
+        appliedFilters={{}}
+      />
 
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-700">Jump to</span>
-          <Input
-            type="number"
-            min="1"
-            max={Math.ceil((transactionTypesData?.total || 0) / itemsPerPage)}
-            value={currentPage}
-            onChange={(e) => setCurrentPage(Number(e.target.value))}
-            className="w-16 h-8 text-center"
-          />
-        </div>
-      </div>
-
-      {/* Add Transaction Type Modal */}
-      <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
+      {/* Edit Modal */}
+      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Add New Transaction Type</DialogTitle>
+            <DialogTitle>Thông tin loại giao dịch</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Name</label>
-              <Input placeholder="Enter transaction type name" />
+              <Label htmlFor="code">Mã giao dịch *</Label>
+              <Input
+                id="code"
+                value={formData.code}
+                onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value }))}
+                placeholder="Nhập mã giao dịch"
+              />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Code</label>
-              <Input placeholder="Enter transaction code" />
+              <Label htmlFor="name">Tên giao dịch *</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Nhập tên giao dịch"
+              />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Description</label>
-              <Input placeholder="Enter description" />
+              <Label htmlFor="description">Mô tả</Label>
+              <Input
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Nhập mô tả"
+              />
             </div>
-            <div className="flex gap-2 pt-4">
-              <Button className="flex-1" onClick={() => setShowAddModal(false)}>
-                Add Transaction Type
-              </Button>
-              <Button variant="outline" onClick={() => setShowAddModal(false)}>
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Filter Modal */}
-      <Dialog open={showFilterModal} onOpenChange={setShowFilterModal}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Filter Transaction Types</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Status</label>
-              <Select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
+              <Label htmlFor="status">Trạng thái</Label>
+              <select
+                id="status"
+                value={formData.status}
+                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'active' | 'inactive' }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">All Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </Select>
+                <option value="active">Hoạt động</option>
+                <option value="inactive">Không hoạt động</option>
+              </select>
             </div>
             <div className="flex gap-2 pt-4">
-              <Button className="flex-1" onClick={handleApplyFilters}>
-                Apply Filters
+              <Button 
+                className="flex-1" 
+                onClick={handleUpdate}
+                disabled={updateMutation.isPending}
+              >
+                {updateMutation.isPending ? 'Đang lưu...' : 'Lưu'}
               </Button>
-              <Button variant="outline" onClick={handleClearFilters}>
-                Clear
-              </Button>
-              <Button variant="outline" onClick={() => setShowFilterModal(false)}>
-                Cancel
+              <Button variant="outline" onClick={() => setShowEditModal(false)}>
+                Hủy
               </Button>
             </div>
           </div>

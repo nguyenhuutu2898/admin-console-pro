@@ -1,185 +1,278 @@
-
 import React, { useState } from 'react';
-import { useSettingsStore } from '../../store/settingsStore';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Button } from '../../components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card';
+import { Input } from '../../components/ui/Input';
 import { Label } from '../../components/ui/Label';
 import { Switch } from '../../components/ui/Switch';
-import { Input } from '../../components/ui/Input';
-import { Button } from '../../components/ui/Button';
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
+import { settingsApi } from '../../services/settings';
+import { useAuth } from '../../hooks/useAuth';
 
 const SettingsPage: React.FC = () => {
-  const { isCompact, toggleCompact } = useSettingsStore();
-  const [systemSettings, setSystemSettings] = useState({
-    sessionTimeout: '30',
-    maxLoginAttempts: '3',
-    passwordExpiryDays: '90',
-    kioskConnectionTimeout: '30',
-    advertisementRotationInterval: '10',
-    systemMaintenanceMode: false,
-    autoBackupEnabled: true,
-    emailNotifications: true,
-    smsNotifications: false
+  const { isSuperAdmin } = useAuth();
+  const queryClient = useQueryClient();
+
+  // State management
+  const [settings, setSettings] = useState<Record<string, any>>({});
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Fetch settings
+  const { data: settingsData, isLoading, error } = useQuery({
+    queryKey: ['settings'],
+    queryFn: settingsApi.getSettings,
   });
+
+  // Update settings mutation
+  const updateMutation = useMutation({
+    mutationFn: settingsApi.updateSettings,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['settings'] });
+      setIsEditing(false);
+    },
+  });
+
+  // Initialize settings when data is loaded
+  React.useEffect(() => {
+    if (settingsData) {
+      setSettings(settingsData);
+    }
+  }, [settingsData]);
+
+  const handleSettingChange = (key: string, value: any) => {
+    setSettings(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleSaveSettings = () => {
+    updateMutation.mutate(settings);
+  };
+
+  const handleResetSettings = () => {
+    if (settingsData) {
+      setSettings(settingsData);
+    }
+  };
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="text-center py-12">
+          <h3 className="text-lg font-medium text-red-600 mb-2">Lỗi tải dữ liệu</h3>
+          <p className="text-gray-500 mb-4">Không thể tải cài đặt hệ thống</p>
+          <Button onClick={() => window.location.reload()}>
+            Thử lại
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="p-6">
+        <div className="space-y-6">
+          <LoadingSkeleton rows={3} columns={1} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
-      <div className="space-y-6 max-w-2xl">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-          <p className="text-muted-foreground">
-              Manage your account and application preferences.
-          </p>
-        </div>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Appearance</CardTitle>
-          <CardDescription>
-            Customize the look and feel of the application dashboard.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between rounded-lg border p-4">
-            <div className="space-y-0.5">
-              <Label htmlFor="compact-mode" className="text-base font-medium">Compact Mode</Label>
-              <p className="text-sm text-muted-foreground">
-                Enable compact density for tables and lists to see more data at once.
-              </p>
-            </div>
-            <Switch
-              id="compact-mode"
-              aria-label="Toggle compact mode"
-              checked={isCompact}
-              onCheckedChange={toggleCompact}
-            />
-          </div>
-        </CardContent>
-      </Card>
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Thiết lập</h1>
+        <p className="text-gray-600">
+          {isSuperAdmin() 
+            ? "Cấu hình các thông số hệ thống" 
+            : "Xem thông tin cài đặt hệ thống"
+          }
+        </p>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>System Configuration</CardTitle>
-          <CardDescription>
-            Configure system parameters and security settings.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="session-timeout">Session Timeout (minutes)</Label>
-              <Input
-                id="session-timeout"
-                type="number"
-                value={systemSettings.sessionTimeout}
-                onChange={(e) => setSystemSettings(prev => ({ ...prev, sessionTimeout: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="max-login-attempts">Max Login Attempts</Label>
-              <Input
-                id="max-login-attempts"
-                type="number"
-                value={systemSettings.maxLoginAttempts}
-                onChange={(e) => setSystemSettings(prev => ({ ...prev, maxLoginAttempts: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password-expiry">Password Expiry (days)</Label>
-              <Input
-                id="password-expiry"
-                type="number"
-                value={systemSettings.passwordExpiryDays}
-                onChange={(e) => setSystemSettings(prev => ({ ...prev, passwordExpiryDays: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="kiosk-timeout">Kiosk Connection Timeout (seconds)</Label>
-              <Input
-                id="kiosk-timeout"
-                type="number"
-                value={systemSettings.kioskConnectionTimeout}
-                onChange={(e) => setSystemSettings(prev => ({ ...prev, kioskConnectionTimeout: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="ad-rotation">Advertisement Rotation Interval (seconds)</Label>
-              <Input
-                id="ad-rotation"
-                type="number"
-                value={systemSettings.advertisementRotationInterval}
-                onChange={(e) => setSystemSettings(prev => ({ ...prev, advertisementRotationInterval: e.target.value }))}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
-                <Label htmlFor="maintenance-mode" className="text-base font-medium">System Maintenance Mode</Label>
-                <p className="text-sm text-muted-foreground">
-                  Enable maintenance mode to temporarily disable system features.
-                </p>
+      <div className="space-y-6">
+        {/* System Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Thiết lập hệ thống</CardTitle>
+            <CardDescription>
+              Cấu hình các thông số cơ bản của hệ thống
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <Label htmlFor="sessionTimeout">Thời gian hết phiên (phút)</Label>
+                <Input
+                  id="sessionTimeout"
+                  type="number"
+                  value={settings.sessionTimeout || ''}
+                  onChange={(e) => handleSettingChange('sessionTimeout', parseInt(e.target.value))}
+                  disabled={!isSuperAdmin()}
+                  placeholder="30"
+                />
               </div>
-              <Switch
-                id="maintenance-mode"
-                checked={systemSettings.systemMaintenanceMode}
-                onCheckedChange={(checked) => setSystemSettings(prev => ({ ...prev, systemMaintenanceMode: checked }))}
-              />
-            </div>
-
-            <div className="flex items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
-                <Label htmlFor="auto-backup" className="text-base font-medium">Auto Backup</Label>
-                <p className="text-sm text-muted-foreground">
-                  Enable automatic daily backup of system data.
-                </p>
+              
+              <div>
+                <Label htmlFor="maxLoginAttempts">Số lần đăng nhập tối đa</Label>
+                <Input
+                  id="maxLoginAttempts"
+                  type="number"
+                  value={settings.maxLoginAttempts || ''}
+                  onChange={(e) => handleSettingChange('maxLoginAttempts', parseInt(e.target.value))}
+                  disabled={!isSuperAdmin()}
+                  placeholder="5"
+                />
               </div>
-              <Switch
-                id="auto-backup"
-                checked={systemSettings.autoBackupEnabled}
-                onCheckedChange={(checked) => setSystemSettings(prev => ({ ...prev, autoBackupEnabled: checked }))}
-              />
-            </div>
-
-            <div className="flex items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
-                <Label htmlFor="email-notifications" className="text-base font-medium">Email Notifications</Label>
-                <p className="text-sm text-muted-foreground">
-                  Enable email notifications for system events.
-                </p>
+              
+              <div>
+                <Label htmlFor="passwordExpiryDays">Thời hạn mật khẩu (ngày)</Label>
+                <Input
+                  id="passwordExpiryDays"
+                  type="number"
+                  value={settings.passwordExpiryDays || ''}
+                  onChange={(e) => handleSettingChange('passwordExpiryDays', parseInt(e.target.value))}
+                  disabled={!isSuperAdmin()}
+                  placeholder="90"
+                />
               </div>
-              <Switch
-                id="email-notifications"
-                checked={systemSettings.emailNotifications}
-                onCheckedChange={(checked) => setSystemSettings(prev => ({ ...prev, emailNotifications: checked }))}
-              />
-            </div>
-
-            <div className="flex items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
-                <Label htmlFor="sms-notifications" className="text-base font-medium">SMS Notifications</Label>
-                <p className="text-sm text-muted-foreground">
-                  Enable SMS notifications for critical system events.
-                </p>
+              
+              <div>
+                <Label htmlFor="kioskConnectionTimeout">Timeout kết nối Kiosk (giây)</Label>
+                <Input
+                  id="kioskConnectionTimeout"
+                  type="number"
+                  value={settings.kioskConnectionTimeout || ''}
+                  onChange={(e) => handleSettingChange('kioskConnectionTimeout', parseInt(e.target.value))}
+                  disabled={!isSuperAdmin()}
+                  placeholder="30"
+                />
               </div>
-              <Switch
-                id="sms-notifications"
-                checked={systemSettings.smsNotifications}
-                onCheckedChange={(checked) => setSystemSettings(prev => ({ ...prev, smsNotifications: checked }))}
-              />
             </div>
-          </div>
+          </CardContent>
+        </Card>
 
-          <div className="flex gap-2 pt-4">
-            <Button onClick={() => console.log('Save settings:', systemSettings)}>
-              Save Settings
+        {/* Advertisement Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Cài đặt quảng cáo</CardTitle>
+            <CardDescription>
+              Cấu hình các thông số liên quan đến quảng cáo
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <Label htmlFor="advertisementRotationInterval">Thời gian xoay quảng cáo (giây)</Label>
+                <Input
+                  id="advertisementRotationInterval"
+                  type="number"
+                  value={settings.advertisementRotationInterval || ''}
+                  onChange={(e) => handleSettingChange('advertisementRotationInterval', parseInt(e.target.value))}
+                  disabled={!isSuperAdmin()}
+                  placeholder="10"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* System Status */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Trạng thái hệ thống</CardTitle>
+            <CardDescription>
+              Quản lý trạng thái hoạt động của hệ thống
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="systemMaintenanceMode">Chế độ bảo trì</Label>
+                  <p className="text-sm text-gray-500">Kích hoạt chế độ bảo trì hệ thống</p>
+                </div>
+                <Switch
+                  id="systemMaintenanceMode"
+                  checked={settings.systemMaintenanceMode || false}
+                  onCheckedChange={(checked) => handleSettingChange('systemMaintenanceMode', checked)}
+                  disabled={!isSuperAdmin()}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="autoBackupEnabled">Tự động sao lưu</Label>
+                  <p className="text-sm text-gray-500">Tự động sao lưu dữ liệu hàng ngày</p>
+                </div>
+                <Switch
+                  id="autoBackupEnabled"
+                  checked={settings.autoBackupEnabled || false}
+                  onCheckedChange={(checked) => handleSettingChange('autoBackupEnabled', checked)}
+                  disabled={!isSuperAdmin()}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Notification Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Cài đặt thông báo</CardTitle>
+            <CardDescription>
+              Cấu hình các kênh thông báo
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="emailNotifications">Thông báo Email</Label>
+                  <p className="text-sm text-gray-500">Gửi thông báo qua email</p>
+                </div>
+                <Switch
+                  id="emailNotifications"
+                  checked={settings.emailNotifications || false}
+                  onCheckedChange={(checked) => handleSettingChange('emailNotifications', checked)}
+                  disabled={!isSuperAdmin()}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="smsNotifications">Thông báo SMS</Label>
+                  <p className="text-sm text-gray-500">Gửi thông báo qua SMS</p>
+                </div>
+                <Switch
+                  id="smsNotifications"
+                  checked={settings.smsNotifications || false}
+                  onCheckedChange={(checked) => handleSettingChange('smsNotifications', checked)}
+                  disabled={!isSuperAdmin()}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Action Buttons */}
+        {isSuperAdmin() && (
+          <div className="flex gap-4 pt-6">
+            <Button 
+              onClick={handleSaveSettings}
+              disabled={updateMutation.isPending}
+            >
+              {updateMutation.isPending ? 'Đang lưu...' : 'Lưu cài đặt'}
             </Button>
-            <Button variant="outline" onClick={() => window.location.reload()}>
-              Reset to Defaults
+            <Button 
+              variant="outline"
+              onClick={handleResetSettings}
+              disabled={updateMutation.isPending}
+            >
+              Đặt lại
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        )}
       </div>
     </div>
   );
