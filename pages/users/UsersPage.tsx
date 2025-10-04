@@ -7,12 +7,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../componen
 import { FloatingInput, FloatingSelect, Label, Input } from '../../components/ui';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { FilterSheet } from '../../components/ui/FilterSheet';
-import { FilterChips } from '../../components/ui/FilterChips';
 import { PaginationFooter } from '../../components/ui/PaginationFooter';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
-import { MoreVertical, Edit, Trash2, Plus, Filter, Key } from '../../components/Icons';
+import { MoreVertical, Edit, Trash2, Plus, Filter, Key, RotateCcw } from '../../components/Icons';
 import { usersApi } from '../../services/users';
 import { useAuth } from '../../hooks/useAuth';
 import { User, UserFilter, UserRole } from '../../types';
@@ -176,6 +175,7 @@ const UsersPage: React.FC = () => {
 
   const handleClearFilters = () => {
     setFilters({});
+    setSearch('');
     setPage(1);
   };
 
@@ -304,6 +304,16 @@ const UsersPage: React.FC = () => {
             isFilter={true}
           />
           
+          <Button 
+            variant="outline" 
+            onClick={handleClearFilters}
+            disabled={!Object.keys(filters).some(key => filters[key as keyof UserFilter]) && !search}
+            className="flex items-center gap-2"
+          >
+            <RotateCcw className="h-4 w-4" />
+            Xóa bộ lọc
+          </Button>
+          
           {canCreate('users') && (
             <Button className="ml-auto" onClick={() => setShowCreateModal(true)}>
               <Plus className="h-4 w-4 mr-2" />
@@ -312,17 +322,6 @@ const UsersPage: React.FC = () => {
           )}
         </div>
       </div>
-
-      {/* Filter Chips */}
-      {Object.keys(filters).length > 0 && (
-        <div className="mb-4">
-          <FilterChips
-            chips={filterChips}
-            onRemove={handleRemoveFilter}
-            onClearAll={handleClearFilters}
-          />
-        </div>
-      )}
 
       {/* Table */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">

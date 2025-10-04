@@ -383,19 +383,15 @@ export const mockApi = {
       const searchTerm = params.q.toLowerCase();
       filteredAds = filteredAds.filter(ad => 
         ad.code.toLowerCase().includes(searchTerm) ||
-        ad.title.toLowerCase().includes(searchTerm)
+        ad.name.toLowerCase().includes(searchTerm)
       );
     }
     
     if (params.branchId) {
-      filteredAds = filteredAds.filter(ad => ad.targetBranchIds.includes(params.branchId));
+      filteredAds = filteredAds.filter(ad => ad.branchId === params.branchId);
     }
     if (params.status) {
-      filteredAds = filteredAds.filter(ad => {
-        if (params.status === 'active') return ad.isActive;
-        if (params.status === 'inactive') return !ad.isActive;
-        return true;
-      });
+      filteredAds = filteredAds.filter(ad => ad.status === params.status);
     }
     if (params.type) {
       filteredAds = filteredAds.filter(ad => ad.type === params.type);
@@ -420,9 +416,6 @@ export const mockApi = {
       id: Date.now().toString(),
       code: `AD${String(mockAds.length + 1).padStart(3, '0')}`,
       ...data,
-      targetBranchNames: mockBranches
-        .filter(branch => data.targetBranchIds.includes(branch.id))
-        .map(branch => branch.name),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -437,11 +430,6 @@ export const mockApi = {
       mockAds[index] = { 
         ...mockAds[index], 
         ...data,
-        targetBranchNames: data.targetBranchIds ? 
-          mockBranches
-            .filter(branch => data.targetBranchIds.includes(branch.id))
-            .map(branch => branch.name) : 
-          mockAds[index].targetBranchNames,
         updatedAt: new Date().toISOString(),
       };
       return mockAds[index];

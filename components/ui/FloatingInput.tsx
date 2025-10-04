@@ -54,7 +54,7 @@ export const FloatingInput: React.FC<FloatingInputProps> = ({
   `;
 
   return (
-    <div className="relative mb-3">
+    <div className="relative">
       <input
         id={inputId}
         placeholder=" "

@@ -9,13 +9,12 @@ import { Label } from '../../components/ui/Label';
 import { FloatingInput, FloatingSelect } from '../../components/ui';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { FilterSheet } from '../../components/ui/FilterSheet';
-import { FilterChips } from '../../components/ui/FilterChips';
 import { CascadingLocationSelect } from '../../components/ui/CascadingLocationSelect';
 import { PaginationFooter } from '../../components/ui/PaginationFooter';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
-import { MoreVertical, Edit, Trash2, Plus, Filter } from '../../components/Icons';
+import { MoreVertical, Edit, Trash2, Plus, Filter, RotateCcw } from '../../components/Icons';
 import { branchesApi } from '../../services/branches';
 import { useAuth } from '../../hooks/useAuth';
 import { Branch, LocationFilter } from '../../types';
@@ -150,6 +149,7 @@ const BranchesPage: React.FC = () => {
 
   const handleClearFilters = () => {
     setFilters({});
+    setSearch('');
     setPage(1);
   };
 
@@ -235,6 +235,16 @@ const BranchesPage: React.FC = () => {
             isFilter={true}
           />
           
+          <Button 
+            variant="outline" 
+            onClick={handleClearFilters}
+            disabled={!Object.keys(filters).some(key => filters[key as keyof LocationFilter]) && !search}
+            className="flex items-center gap-2"
+          >
+            <RotateCcw className="h-4 w-4" />
+            Xóa bộ lọc
+          </Button>
+          
           {canCreate('branches') && (
             <Button className="ml-auto" onClick={() => setShowCreateModal(true)}>
               <Plus className="h-4 w-4 mr-2" />
@@ -243,17 +253,6 @@ const BranchesPage: React.FC = () => {
           )}
         </div>
       </div>
-
-      {/* Filter Chips */}
-      {Object.keys(filters).length > 0 && (
-        <div className="mb-4">
-          <FilterChips
-            chips={filterChips}
-            onRemove={handleRemoveFilter}
-            onClearAll={handleClearFilters}
-          />
-        </div>
-      )}
 
       {/* Table */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">

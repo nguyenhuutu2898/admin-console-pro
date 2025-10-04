@@ -7,11 +7,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../componen
 import { FloatingInput, FloatingSelect } from '../../components/ui';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { FilterSheet } from '../../components/ui/FilterSheet';
-import { FilterChips } from '../../components/ui/FilterChips';
 import { PaginationFooter } from '../../components/ui/PaginationFooter';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
-import { MoreVertical, Edit, Filter, Receipt } from '../../components/Icons';
+import { MoreVertical, Edit, Filter, Receipt, RotateCcw } from '../../components/Icons';
 import { transactionTypesApi } from '../../services/transactionTypes';
 import { useAuth } from '../../hooks/useAuth';
 import { TransactionType } from '../../types';
@@ -146,6 +145,18 @@ const TransactionTypesPage: React.FC = () => {
             height="h-10"
             isFilter={true}
           />
+        </div>
+        
+        <div className="flex flex-1 items-center gap-2 w-full lg:w-auto">
+          <Button 
+            variant="outline" 
+            onClick={() => setSearch('')}
+            disabled={!search}
+            className="flex items-center gap-2"
+          >
+            <RotateCcw className="h-4 w-4" />
+            Xóa bộ lọc
+          </Button>
         </div>
       </div>
 
