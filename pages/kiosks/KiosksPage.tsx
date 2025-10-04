@@ -306,7 +306,7 @@ const KiosksPage: React.FC = () => {
               <TableHead className="font-semibold text-gray-900">Chi nhánh</TableHead>
               <TableHead className="font-semibold text-gray-900">Trạng thái</TableHead>
               <TableHead className="font-semibold text-gray-900">Lần cuối kết nối</TableHead>
-              <TableHead className="font-semibold text-gray-900">Thao tác</TableHead>
+              <TableHead className="font-semibold text-gray-900 w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -356,7 +356,7 @@ const KiosksPage: React.FC = () => {
                       {kiosk.lastSeenAt ? new Date(kiosk.lastSeenAt).toLocaleString('vi-VN') : 'Chưa kết nối'}
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="w-[50px]">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -587,12 +587,13 @@ const KiosksPage: React.FC = () => {
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         onConfirm={confirmDelete}
-        title="Xác nhận xóa"
-        message={`Bạn có chắc chắn muốn xóa kiosk "${deletingKiosk?.name}" này không?`}
-        confirmText="Đồng ý"
-        cancelText="Không"
+        title="Bạn có chắc muốn xóa kiosk đã chọn"
+        message="Bạn đang thực hiện xóa kiosk, việc này không thể hoàn tác! Bạn có chắc chắn muốn xóa không?"
+        confirmText="ĐỒNG Ý"
+        cancelText="KHÔNG"
         variant="destructive"
         isLoading={deleteMutation.isPending}
+        width="w-fit"
       />
     </div>
   );

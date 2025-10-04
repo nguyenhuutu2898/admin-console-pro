@@ -504,9 +504,7 @@ const AdsPage: React.FC = () => {
               <TableHead className="font-semibold text-gray-900">
                 Trạng thái
               </TableHead>
-              <TableHead className="font-semibold text-gray-900">
-                Thao tác
-              </TableHead>
+              <TableHead className="font-semibold text-gray-900 w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -578,7 +576,7 @@ const AdsPage: React.FC = () => {
                       {getStatusLabel(ad.status)}
                     </span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="w-[50px]">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -888,12 +886,13 @@ const AdsPage: React.FC = () => {
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         onConfirm={confirmDelete}
-        title="Xác nhận xóa"
-        message={`Bạn có chắc chắn muốn xóa quảng cáo "${deletingAd?.name}" này không?`}
-        confirmText="Đồng ý"
-        cancelText="Không"
+        title="Bạn có chắc muốn xóa quảng cáo đã chọn"
+        message="Bạn đang thực hiện xóa quảng cáo, việc này không thể hoàn tác! Bạn có chắc chắn muốn xóa không?"
+        confirmText="ĐỒNG Ý"
+        cancelText="KHÔNG"
         variant="destructive"
         isLoading={deleteMutation.isPending}
+        width="w-fit"
       />
     </div>
   );

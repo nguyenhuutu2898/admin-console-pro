@@ -169,7 +169,7 @@ const TransactionTypesPage: React.FC = () => {
               <TableHead className="font-semibold text-gray-900">Tên giao dịch</TableHead>
               <TableHead className="font-semibold text-gray-900">Mô tả</TableHead>
               <TableHead className="font-semibold text-gray-900">Trạng thái</TableHead>
-              <TableHead className="font-semibold text-gray-900">Thao tác</TableHead>
+              <TableHead className="font-semibold text-gray-900 w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -215,7 +215,7 @@ const TransactionTypesPage: React.FC = () => {
                       {transactionType.status === 'active' ? 'Hoạt động' : 'Không hoạt động'}
                     </span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="w-[50px]">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8">

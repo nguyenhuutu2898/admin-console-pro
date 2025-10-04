@@ -9,6 +9,7 @@ export enum UserRole {
 export type Branch = {
   id: string;
   code: string;          // Mã chi nhánh
+  coreCode?: string;     // Mã CN gốc
   name: string;          // Tên chi nhánh
   province?: string;     // Tỉnh/Thành phố
   district?: string;     // Quận/Huyện

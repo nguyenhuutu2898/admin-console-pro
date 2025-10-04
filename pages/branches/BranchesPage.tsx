@@ -38,6 +38,7 @@ const BranchesPage: React.FC = () => {
   // Form data
   const [formData, setFormData] = useState({
     code: '',
+    coreCode: '',
     name: '',
     province: '',
     district: '',
@@ -90,6 +91,7 @@ const BranchesPage: React.FC = () => {
   const resetForm = () => {
     setFormData({
       code: '',
+      coreCode: '',
       name: '',
       province: '',
       district: '',
@@ -107,6 +109,7 @@ const BranchesPage: React.FC = () => {
     setEditingBranch(branch);
     setFormData({
       code: branch.code,
+      coreCode: branch.coreCode || branch.code,
       name: branch.name,
       province: branch.province || '',
       district: branch.district || '',
@@ -259,11 +262,11 @@ const BranchesPage: React.FC = () => {
         <Table>
           <TableHeader>
             <TableRow className="bg-gray-50">
-              <TableHead className="font-semibold text-gray-900">Mã chi nhánh</TableHead>
-              <TableHead className="font-semibold text-gray-900">Tên chi nhánh</TableHead>
-              <TableHead className="font-semibold text-gray-900">Địa chỉ</TableHead>
-              <TableHead className="font-semibold text-gray-900">Trạng thái</TableHead>
-              <TableHead className="font-semibold text-gray-900">Thao tác</TableHead>
+              <TableHead className="font-semibold text-gray-900">Mã CN</TableHead>
+              <TableHead className="font-semibold text-gray-900">Mã CN gốc</TableHead>
+              <TableHead className="font-semibold text-gray-900">Tên tỉnh thành</TableHead>
+              <TableHead className="font-semibold text-gray-900">Ngày cập nhật</TableHead>
+              <TableHead className="font-semibold text-gray-900 w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -296,25 +299,17 @@ const BranchesPage: React.FC = () => {
                     <div className="font-medium">{branch.code}</div>
                   </TableCell>
                   <TableCell>
-                    <div className="font-medium">{branch.name}</div>
+                    <div className="font-medium">{branch.coreCode || branch.code}</div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm text-gray-600">{branch.province}</div>
                   </TableCell>
                   <TableCell>
                     <div className="text-sm text-gray-600">
-                      {[branch.ward, branch.district, branch.province]
-                        .filter(Boolean)
-                        .join(', ')}
+                      {branch.updatedAt ? new Date(branch.updatedAt).toLocaleDateString('vi-VN') : '-'}
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      branch.status === 'active' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {branch.status === 'active' ? 'Hoạt động' : 'Tạm dừng'}
-                    </span>
-                  </TableCell>
-                  <TableCell>
+                  <TableCell className="w-[50px]">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -393,11 +388,11 @@ const BranchesPage: React.FC = () => {
               <div>
                 <FloatingInput
                   id="core-code"
-                  label="Mã chi nhánh trên core"
+                  label="Mã CN gốc"
                   infoIcon={true}
                   required={true}
-                  value={formData.code}
-                  onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value }))}
+                  value={formData.coreCode}
+                  onChange={(e) => setFormData(prev => ({ ...prev, coreCode: e.target.value }))}
                 />
               </div>
             </div>
@@ -428,7 +423,7 @@ const BranchesPage: React.FC = () => {
 
             {/* Row 4: Tỉnh/Thành phố, Quận/Huyện, Phường/Xã */}
             <div className="grid grid-cols-3 gap-4">
-              <div>
+            <div>
                 <FloatingSelect
                   label="Tỉnh/Thành Phố"
                   required={true}
@@ -440,9 +435,9 @@ const BranchesPage: React.FC = () => {
                     { value: "DN", label: "Đà Nẵng" },
                     { value: "CT", label: "Cần Thơ" }
                   ]}
-                />
-              </div>
-              <div>
+              />
+            </div>
+            <div>
                 <FloatingSelect
                   label="Quận/ Huyện"
                   required={true}
@@ -453,9 +448,9 @@ const BranchesPage: React.FC = () => {
                     { value: "BD", label: "Quận Ba Đình" },
                     { value: "Q1", label: "Quận 1" }
                   ]}
-                />
-              </div>
-              <div>
+              />
+            </div>
+            <div>
                 <FloatingSelect
                   label="Phường/ Xã"
                   required={true}
@@ -466,8 +461,8 @@ const BranchesPage: React.FC = () => {
                     { value: "PX", label: "Phường Phúc Xá" },
                     { value: "BN", label: "Phường Bến Nghé" }
                   ]}
-                />
-              </div>
+              />
+            </div>
             </div>
           </div>
           <div className="flex justify-end gap-2 mt-6">
@@ -489,7 +484,7 @@ const BranchesPage: React.FC = () => {
             <p className="text-sm text-gray-600">Điền thông tin cho chi nhánh</p>
           </DialogHeader>
           <div className="space-y-4">
-            {/* Row 1: Mã chi nhánh, Tên chi nhánh */}
+            {/* Row 1: Mã chi nhánh, Mã CN gốc */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <FloatingInput
@@ -503,14 +498,25 @@ const BranchesPage: React.FC = () => {
               </div>
               <div>
                 <FloatingInput
-                  id="edit-name"
-                  label="Tên chi nhánh"
+                  id="edit-core-code"
+                  label="Mã CN gốc"
                   infoIcon={true}
                   required={true}
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  value={formData.coreCode}
+                  onChange={(e) => setFormData(prev => ({ ...prev, coreCode: e.target.value }))}
                 />
               </div>
+            </div>
+            {/* Row 2: Tên chi nhánh */}
+            <div>
+              <FloatingInput
+                id="edit-name"
+                label="Tên chi nhánh"
+                infoIcon={true}
+                required={true}
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              />
             </div>
             {/* Row 2: Địa chỉ */}
             <div>
@@ -526,7 +532,7 @@ const BranchesPage: React.FC = () => {
 
             {/* Row 3: Tỉnh/Thành phố, Quận/Huyện, Phường/Xã */}
             <div className="grid grid-cols-3 gap-4">
-              <div>
+            <div>
                 <FloatingSelect
                   label="Tỉnh/Thành Phố"
                   required={true}
@@ -538,9 +544,9 @@ const BranchesPage: React.FC = () => {
                     { value: "DN", label: "Đà Nẵng" },
                     { value: "CT", label: "Cần Thơ" }
                   ]}
-                />
-              </div>
-              <div>
+              />
+            </div>
+            <div>
                 <FloatingSelect
                   label="Quận/ Huyện"
                   required={true}
@@ -551,9 +557,9 @@ const BranchesPage: React.FC = () => {
                     { value: "BD", label: "Quận Ba Đình" },
                     { value: "Q1", label: "Quận 1" }
                   ]}
-                />
-              </div>
-              <div>
+              />
+            </div>
+            <div>
                 <FloatingSelect
                   label="Phường/ Xã"
                   required={true}
@@ -588,12 +594,13 @@ const BranchesPage: React.FC = () => {
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         onConfirm={confirmDelete}
-        title="Xác nhận xóa"
-        message={`Bạn có chắc chắn muốn xóa chi nhánh "${deletingBranch?.name}" này không?`}
-        confirmText="Đồng ý"
-        cancelText="Không"
+        title="Bạn có chắc muốn xóa chi nhánh đã chọn"
+        message="Bạn đang thực hiện xóa chi nhánh, việc này không thể hoàn tác! Bạn có chắc chắn muốn xóa không?"
+        confirmText="ĐỒNG Ý"
+        cancelText="KHÔNG"
         variant="destructive"
         isLoading={deleteMutation.isPending}
+        width="w-fit"
       />
           </div>
   );

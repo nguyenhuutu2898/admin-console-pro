@@ -6,6 +6,7 @@ const mockBranches: Branch[] = [
   {
     id: '1',
     code: 'HN001',
+    coreCode: 'HN001_CORE',
     name: 'Chi nhánh Hà Nội',
     province: 'Hà Nội',
     district: 'Quận Ba Đình',
@@ -18,6 +19,7 @@ const mockBranches: Branch[] = [
   {
     id: '2',
     code: 'HCM001',
+    coreCode: 'HCM001_CORE',
     name: 'Chi nhánh TP.HCM',
     province: 'TP. Hồ Chí Minh',
     district: 'Quận 1',

@@ -333,7 +333,7 @@ const UsersPage: React.FC = () => {
               <TableHead className="font-semibold text-gray-900">Quyền hạn</TableHead>
               <TableHead className="font-semibold text-gray-900">Chi nhánh</TableHead>
               <TableHead className="font-semibold text-gray-900">Trạng thái</TableHead>
-              <TableHead className="font-semibold text-gray-900">Thao tác</TableHead>
+              <TableHead className="font-semibold text-gray-900 w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -391,7 +391,7 @@ const UsersPage: React.FC = () => {
                       {user.status === 'active' ? 'Hoạt động' : 'Tạm dừng'}
                     </span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="w-[50px]">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -649,12 +649,13 @@ const UsersPage: React.FC = () => {
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         onConfirm={confirmDelete}
-        title="Xác nhận xóa"
-        message={`Bạn có chắc chắn muốn xóa người dùng "${deletingUser?.fullName}" này không?`}
-        confirmText="Đồng ý"
-        cancelText="Không"
+        title="Bạn có chắc muốn xóa người dùng đã chọn"
+        message="Bạn đang thực hiện xóa người dùng, việc này không thể hoàn tác! Bạn có chắc chắn muốn xóa không?"
+        confirmText="ĐỒNG Ý"
+        cancelText="KHÔNG"
         variant="destructive"
         isLoading={deleteMutation.isPending}
+        width="w-fit"
       />
     </div>
   );
