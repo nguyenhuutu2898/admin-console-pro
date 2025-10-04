@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Select } from './Select';
+import { FloatingSelect } from './FloatingSelect';
 import { provinces, getDistrictsByProvince, getWardsByDistrict } from '../../lib/location-data';
 
 interface CascadingLocationSelectProps {
@@ -11,6 +11,10 @@ interface CascadingLocationSelectProps {
   onWardChange: (ward: string) => void;
   onClear?: () => void;
   className?: string;
+  width?: string;
+  height?: string;
+  selectWidth?: string;
+  isFilter?: boolean;
 }
 
 export const CascadingLocationSelect: React.FC<CascadingLocationSelectProps> = ({
@@ -21,7 +25,11 @@ export const CascadingLocationSelect: React.FC<CascadingLocationSelectProps> = (
   onDistrictChange,
   onWardChange,
   onClear,
-  className
+  className,
+  width = 'w-full',
+  height = 'h-10',
+  selectWidth = 'flex-1',
+  isFilter = false,
 }) => {
   const [districts, setDistricts] = useState(getDistrictsByProvince(province || ''));
   const [wards, setWards] = useState(getWardsByDistrict(province || '', district || ''));
@@ -67,58 +75,49 @@ export const CascadingLocationSelect: React.FC<CascadingLocationSelectProps> = (
   };
 
   return (
-    <div className={`space-y-3 ${className}`}>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Tỉnh/Thành phố
-        </label>
-        <Select
+    <div className={`flex items-stretch gap-2 ${width} ${height} ${className}`}>
+      <div className={`${selectWidth} min-w-0`}>
+        <FloatingSelect
+          label="Tỉnh/Thành phố"
           value={province || ''}
-          onValueChange={handleProvinceChange}
-          placeholder="Chọn tỉnh/thành phố"
-        >
-          {provinces.map((p) => (
-            <option key={p.code} value={p.code}>
-              {p.name}
-            </option>
-          ))}
-        </Select>
+          onChange={handleProvinceChange}
+          options={provinces.map((p) => ({
+            value: p.code,
+            label: p.name
+          }))}
+          height={height}
+          isFilter={isFilter}
+        />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Quận/Huyện
-        </label>
-        <Select
+      <div className={`${selectWidth} min-w-0`}>
+        <FloatingSelect
+          label="Quận/Huyện"
           value={district || ''}
-          onValueChange={handleDistrictChange}
-          placeholder="Chọn quận/huyện"
+          onChange={handleDistrictChange}
+          options={districts.map((d) => ({
+            value: d.code,
+            label: d.name
+          }))}
           disabled={!province}
-        >
-          {districts.map((d) => (
-            <option key={d.code} value={d.code}>
-              {d.name}
-            </option>
-          ))}
-        </Select>
+          height={height}
+          isFilter={isFilter}
+        />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Phường/Xã
-        </label>
-        <Select
+      <div className={`${selectWidth} min-w-0`}>
+        <FloatingSelect
+          label="Phường/Xã"
           value={ward || ''}
-          onValueChange={onWardChange}
-          placeholder="Chọn phường/xã"
+          onChange={onWardChange}
+          options={wards.map((w) => ({
+            value: w.code,
+            label: w.name
+          }))}
           disabled={!district}
-        >
-          {wards.map((w) => (
-            <option key={w.code} value={w.code}>
-              {w.name}
-            </option>
-          ))}
-        </Select>
+          height={height}
+          isFilter={isFilter}
+        />
       </div>
     </div>
   );

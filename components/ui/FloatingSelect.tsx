@@ -17,6 +17,8 @@ interface FloatingSelectProps {
   required?: boolean;
   disabled?: boolean;
   className?: string;
+  height?: string;
+  isFilter?: boolean;
 }
 
 export const FloatingSelect: React.FC<FloatingSelectProps> = ({
@@ -28,6 +30,8 @@ export const FloatingSelect: React.FC<FloatingSelectProps> = ({
   required = false,
   disabled = false,
   className,
+  height = 'h-12',
+  isFilter = false,
 }) => {
   const autoId = React.useId();
   const [isFocused, setIsFocused] = React.useState(false);
@@ -44,6 +48,16 @@ export const FloatingSelect: React.FC<FloatingSelectProps> = ({
     }
     /* Màu khi focus */
     .custom-dropdown-${autoId}:focus-within + label { color: #2563eb; }
+    
+    /* Màu và background khi disabled */
+    .custom-dropdown-${autoId}.disabled + label { 
+      color: #d1d5db; 
+      background-color: #e5e7eb;
+    }
+    .custom-dropdown-${autoId}.disabled.has-value + label { 
+      color: #d1d5db; 
+      background-color: #e5e7eb;
+    }
 
     /* Icon chỉ hiện khi label ontop (focus/has value) */
     .custom-dropdown-${autoId}:focus-within + label .info-icon,
@@ -53,11 +67,12 @@ export const FloatingSelect: React.FC<FloatingSelectProps> = ({
   `;
 
   return (
-    <div className="relative mb-3">
+    <div className={`relative ${height} ${className}`}>
       <div 
         className={cn(
           "custom-dropdown-" + autoId,
-          hasValue && "has-value"
+          hasValue && "has-value",
+          disabled && "disabled"
         )}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
@@ -67,14 +82,17 @@ export const FloatingSelect: React.FC<FloatingSelectProps> = ({
           value={value}
           onChange={onChange}
           disabled={disabled}
-          className="w-full"
+          className={`w-full ${height}`}
+          height={height}
         />
       </div>
 
       <label
         className={cn(
           "absolute z-10 cursor-text pointer-events-none",
-          "top-[13px] left-[10px] text-[12px] font-bold",
+          `${
+            isFilter ? "top-[11px]" : "top-[13px]"
+          } left-[10px] text-[12px] font-bold`,
           "text-[#999] bg-white px-[10px]",
           "transition-all duration-300 ease-linear"
         )}

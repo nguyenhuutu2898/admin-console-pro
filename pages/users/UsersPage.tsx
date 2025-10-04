@@ -4,7 +4,7 @@ import { Button } from '../../components/ui/Button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/Table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../../components/ui/DropdownMenu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/Dialog';
-import { FloatingInput, FloatingSelect } from '../../components/ui';
+import { FloatingInput, FloatingSelect, Label, Input } from '../../components/ui';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { FilterSheet } from '../../components/ui/FilterSheet';
 import { FilterChips } from '../../components/ui/FilterChips';
@@ -248,25 +248,64 @@ const UsersPage: React.FC = () => {
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Phân quyền</h1>
       </div>
 
-      {/* Search and Actions */}
-      <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <SearchBar
-          value={search}
-          onChange={setSearch}
-          placeholder="Tên đăng nhập/Họ tên"
-        />
+      {/* Search, Filter and Actions */}
+      <div className="mb-6 flex flex-col lg:flex-row gap-2 items-start lg:items-center">
+        <div className="w-full lg:w-auto">
+          <SearchBar
+            value={search}
+            onChange={setSearch}
+            placeholder="Tên đăng nhập/Họ tên"
+            label="Tìm kiếm"
+            width="w-full lg:w-80"
+            height="h-10"
+            isFilter={true}
+          />
+        </div>
         
-        <div className="flex gap-2">
-          <Button 
-            variant="outline"
-            onClick={() => setShowFilterSheet(true)}
-          >
-            <Filter className="h-4 w-4 mr-2" />
-            Lọc dữ liệu
-          </Button>
+        <div className="flex flex-1 items-center gap-2 w-full lg:w-auto">
+          <FloatingSelect
+            label="Chi nhánh"
+            value={filters.branchId || ''}
+            onChange={(value) => setFilters(prev => ({ ...prev, branchId: value || undefined }))}
+            options={[
+              { value: "1", label: "Chi nhánh Hà Nội" },
+              { value: "2", label: "Chi nhánh TP.HCM" },
+              { value: "3", label: "Chi nhánh Đà Nẵng" }
+            ]}
+            className="w-[170px]"
+            height="h-10"
+            isFilter={true}
+          />
+          
+          <FloatingSelect
+            label="Quyền hạn"
+            value={filters.role || ''}
+            onChange={(value) => setFilters(prev => ({ ...prev, role: value || undefined }))}
+            options={[
+              { value: "SUPER_ADMIN", label: "Super Admin" },
+              { value: "BRANCH_ADMIN", label: "Branch Admin" },
+              { value: "STAFF", label: "Staff" }
+            ]}
+            className="w-[170px]"
+            height="h-10"
+            isFilter={true}
+          />
+          
+          <FloatingSelect
+            label="Trạng thái"
+            value={filters.status || ''}
+            onChange={(value) => setFilters(prev => ({ ...prev, status: value || undefined }))}
+            options={[
+              { value: "active", label: "Hoạt động" },
+              { value: "inactive", label: "Tạm dừng" }
+            ]}
+            className="w-[170px]"
+            height="h-10"
+            isFilter={true}
+          />
           
           {canCreate('users') && (
-            <Button onClick={() => setShowCreateModal(true)}>
+            <Button className="ml-auto" onClick={() => setShowCreateModal(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Thêm người dùng
             </Button>
@@ -275,11 +314,15 @@ const UsersPage: React.FC = () => {
       </div>
 
       {/* Filter Chips */}
-      <FilterChips
-        chips={filterChips}
-        onRemove={handleRemoveFilter}
-        onClearAll={handleClearFilters}
-      />
+      {Object.keys(filters).length > 0 && (
+        <div className="mb-4">
+          <FilterChips
+            chips={filterChips}
+            onRemove={handleRemoveFilter}
+            onClearAll={handleClearFilters}
+          />
+        </div>
+      )}
 
       {/* Table */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">

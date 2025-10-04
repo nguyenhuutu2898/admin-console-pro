@@ -13,6 +13,7 @@ interface CustomDropdownProps {
   onChange: (value: string) => void;
   disabled?: boolean;
   className?: string;
+  height?: string;
 }
 
 export const CustomDropdown: React.FC<CustomDropdownProps> = ({
@@ -21,8 +22,10 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
   onChange,
   disabled = false,
   className,
+  height = 'h-12',
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [isFocused, setIsFocused] = React.useState(false);
   const [searchTerm, setSearchTerm] = React.useState("");
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
@@ -72,14 +75,16 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
         className={cn(
-          "w-full h-12 px-4 py-3 bg-transparent border border-[#ccc] rounded-md",
+          `w-full ${height} px-3 py-2 bg-transparent border border-[#ccc] rounded-md`,
           "text-left text-gray-800 text-sm",
           "transition-all duration-300 ease-linear",
           "focus:border-blue-600 focus:outline-none",
           "disabled:bg-gray-200 disabled:cursor-not-allowed",
           "flex items-center justify-between",
-          isOpen && "border-blue-600"
+          isFocused && "border-blue-600"
         )}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
       >
         <span className={cn(
           selectedOption ? "text-gray-800" : "text-gray-500"

@@ -11,6 +11,9 @@ interface FloatingDatePickerProps {
   required?: boolean;
   disabled?: boolean;
   className?: string;
+  width?: string;
+  height?: string;
+  isFilter?: boolean;
   min?: string;
   max?: string;
 }
@@ -19,11 +22,14 @@ export const FloatingDatePicker: React.FC<FloatingDatePickerProps> = ({
   label,
   value,
   onChange,
-  placeholder = "Chọn ngày...",
+  placeholder = "",
   infoIcon = false,
   required = false,
   disabled = false,
   className,
+  width = "w-full",
+  height = "h-12",
+  isFilter = false,
   min,
   max,
 }) => {
@@ -51,7 +57,7 @@ export const FloatingDatePicker: React.FC<FloatingDatePickerProps> = ({
   `;
 
   return (
-    <div className="relative mb-3">
+    <div className={cn("relative", width, height)}>
       <div 
         className={cn(
           "custom-datepicker-" + autoId,
@@ -66,6 +72,7 @@ export const FloatingDatePicker: React.FC<FloatingDatePickerProps> = ({
           placeholder={placeholder}
           disabled={disabled}
           className="w-full"
+          height={height}
           min={min}
           max={max}
         />
@@ -74,7 +81,9 @@ export const FloatingDatePicker: React.FC<FloatingDatePickerProps> = ({
       <label
         className={cn(
           "absolute z-10 cursor-text pointer-events-none",
-          "top-[13px] left-[10px] text-[12px] font-bold",
+          `${
+            isFilter ? "top-[11px]" : "top-[13px]"
+          } left-[10px] text-[12px] font-bold`,
           "text-[#999] bg-white px-[10px]",
           "transition-all duration-300 ease-linear"
         )}

@@ -7,6 +7,7 @@ interface CustomDatePickerProps {
   placeholder?: string;
   disabled?: boolean;
   className?: string;
+  height?: string;
   min?: string;
   max?: string;
 }
@@ -14,13 +15,15 @@ interface CustomDatePickerProps {
 export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   value,
   onChange,
-  placeholder = "Chọn ngày...",
+  placeholder = "",
   disabled = false,
   className,
+  height = "h-12",
   min,
   max,
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [isFocused, setIsFocused] = React.useState(false);
   const [selectedDate, setSelectedDate] = React.useState<Date | null>(
     value ? new Date(value) : null
   );
@@ -134,14 +137,17 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
         className={cn(
-          "w-full h-12 px-4 py-3 bg-transparent border border-[#ccc] rounded-md",
+          "w-full px-4 py-3 bg-transparent border border-[#ccc] rounded-md",
+          height,
           "text-left text-gray-800 text-sm",
           "transition-all duration-300 ease-linear",
           "focus:border-blue-600 focus:outline-none",
           "disabled:bg-gray-200 disabled:cursor-not-allowed",
           "flex items-center justify-between",
-          isOpen && "border-blue-600"
+          isFocused && "border-blue-600"
         )}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
       >
         <span className={cn(
           selectedDate ? "text-gray-800" : "text-gray-500"

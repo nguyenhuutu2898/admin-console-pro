@@ -206,25 +206,37 @@ const BranchesPage: React.FC = () => {
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Danh sách chi nhánh</h1>
       </div>
 
-      {/* Search and Actions */}
-      <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <SearchBar
-          value={search}
-          onChange={setSearch}
-          placeholder="Mã/Tên chi nhánh"
-        />
+      {/* Search, Filter and Actions */}
+      <div className="mb-6 flex flex-col lg:flex-row gap-2 items-start lg:items-center">
+        <div className="w-full lg:w-auto">
+          <SearchBar
+            value={search}
+            onChange={setSearch}
+            placeholder="Mã/Tên chi nhánh"
+            label="Tìm kiếm"
+            width="w-full lg:w-80"
+            height="h-10"
+            isFilter={true}
+          />
+        </div>
         
-        <div className="flex gap-2">
-          <Button 
-            variant="outline"
-            onClick={() => setShowFilterSheet(true)}
-          >
-            <Filter className="h-4 w-4 mr-2" />
-            Lọc dữ liệu
-          </Button>
+        <div className="flex flex-1 items-center gap-2 w-full lg:w-auto">
+          <CascadingLocationSelect
+            province={filters.province}
+            district={filters.district}
+            ward={filters.ward}
+            onProvinceChange={(value) => setFilters(prev => ({ ...prev, province: value, district: '', ward: '' }))}
+            onDistrictChange={(value) => setFilters(prev => ({ ...prev, district: value, ward: '' }))}
+            onWardChange={(value) => setFilters(prev => ({ ...prev, ward: value }))}
+            onClear={() => setFilters(prev => ({ ...prev, province: '', district: '', ward: '' }))}
+            width="w-auto"
+            height="h-10"
+            selectWidth="w-[170px]"
+            isFilter={true}
+          />
           
           {canCreate('branches') && (
-            <Button onClick={() => setShowCreateModal(true)}>
+            <Button className="ml-auto" onClick={() => setShowCreateModal(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Thêm chi nhánh
             </Button>
@@ -233,11 +245,15 @@ const BranchesPage: React.FC = () => {
       </div>
 
       {/* Filter Chips */}
-      <FilterChips
-        chips={filterChips}
-        onRemove={handleRemoveFilter}
-        onClearAll={handleClearFilters}
-      />
+      {Object.keys(filters).length > 0 && (
+        <div className="mb-4">
+          <FilterChips
+            chips={filterChips}
+            onRemove={handleRemoveFilter}
+            onClearAll={handleClearFilters}
+          />
+        </div>
+      )}
 
       {/* Table */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">

@@ -1,9 +1,11 @@
 import * as React from "react";
 import { cn } from "../../lib/utils";
 
-interface FloatingInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface FloatingInputProps
+  extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string;
   infoIcon?: boolean;
+  isFilter?: boolean;
 }
 
 export const FloatingInput: React.FC<FloatingInputProps> = ({
@@ -12,6 +14,7 @@ export const FloatingInput: React.FC<FloatingInputProps> = ({
   className,
   id,
   required,
+  isFilter = false,
   ...props
 }) => {
   const autoId = React.useId();
@@ -34,7 +37,9 @@ export const FloatingInput: React.FC<FloatingInputProps> = ({
       display: inline-block;
     }
 
-    ${required ? `
+    ${
+      required
+        ? `
       /* Nếu required: thêm :valid để giữ ontop khi có value */
       input[id="${inputId}"]:valid + label {
         font-size: 11px;
@@ -43,7 +48,9 @@ export const FloatingInput: React.FC<FloatingInputProps> = ({
       input[id="${inputId}"]:valid + label .info-icon {
         display: inline-block;
       }
-    ` : ""}
+    `
+        : ""
+    }
   `;
 
   return (
@@ -67,7 +74,9 @@ export const FloatingInput: React.FC<FloatingInputProps> = ({
         htmlFor={inputId}
         className={cn(
           "absolute z-10 cursor-text pointer-events-none",
-          "top-[13px] left-[10px] text-[12px] font-bold",
+          `${
+            isFilter ? "top-[11px]" : "top-[13px]"
+          } left-[10px] text-[12px] font-bold`,
           "text-[#999] bg-white px-[10px]",
           "transition-all duration-300 ease-linear"
         )}

@@ -135,21 +135,17 @@ const TransactionTypesPage: React.FC = () => {
       </div>
 
       {/* Search and Actions */}
-      <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <SearchBar
-          value={search}
-          onChange={setSearch}
-          placeholder="Mã giao dịch/Tên giao dịch"
-        />
-        
-        <div className="flex gap-2">
-          <Button 
-            variant="outline"
-            onClick={() => setShowFilterSheet(true)}
-          >
-            <Filter className="h-4 w-4 mr-2" />
-            Lọc dữ liệu
-          </Button>
+      <div className="mb-6 flex flex-col lg:flex-row gap-2 items-start lg:items-center">
+        <div className="w-full lg:w-auto">
+          <SearchBar
+            value={search}
+            onChange={setSearch}
+            placeholder="Mã giao dịch/Tên giao dịch"
+            label="Tìm kiếm"
+            width="w-full lg:w-80"
+            height="h-10"
+            isFilter={true}
+          />
         </div>
       </div>
 
