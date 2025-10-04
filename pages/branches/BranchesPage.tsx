@@ -9,6 +9,7 @@ import { Label } from '../../components/ui/Label';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { FilterSheet } from '../../components/ui/FilterSheet';
 import { FilterChips } from '../../components/ui/FilterChips';
+import { CascadingLocationSelect } from '../../components/ui/CascadingLocationSelect';
 import { PaginationFooter } from '../../components/ui/PaginationFooter';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
@@ -159,25 +160,27 @@ const BranchesPage: React.FC = () => {
       label: key === 'province' ? 'Tỉnh/Thành phố' :
              key === 'district' ? 'Quận/Huyện' :
              key === 'ward' ? 'Phường/Xã' : key,
-      value
+      value,
+      type: key === 'province' || key === 'district' || key === 'ward' ? 'location' : 'default'
     }));
 
   // Filter fields for FilterSheet
   const filterFields = [
     {
-      key: 'province',
-      label: 'Tỉnh/Thành phố',
-      type: 'text' as const,
-    },
-    {
-      key: 'district',
-      label: 'Quận/Huyện',
-      type: 'text' as const,
-    },
-    {
-      key: 'ward',
-      label: 'Phường/Xã',
-      type: 'text' as const,
+      key: 'location',
+      label: 'Địa điểm',
+      type: 'custom' as const,
+      component: (
+        <CascadingLocationSelect
+          province={filters.province}
+          district={filters.district}
+          ward={filters.ward}
+          onProvinceChange={(value) => setFilters(prev => ({ ...prev, province: value }))}
+          onDistrictChange={(value) => setFilters(prev => ({ ...prev, district: value }))}
+          onWardChange={(value) => setFilters(prev => ({ ...prev, ward: value }))}
+          onClear={() => setFilters(prev => ({ ...prev, province: '', district: '', ward: '' }))}
+        />
+      )
     },
   ];
 
@@ -336,7 +339,7 @@ const BranchesPage: React.FC = () => {
           limit={limit}
           onPageChange={setPage}
           onLimitChange={setLimit}
-          isLoading={isLoading}
+        isLoading={isLoading}
         />
       )}
 
@@ -369,7 +372,7 @@ const BranchesPage: React.FC = () => {
             </div>
             <div>
               <Label htmlFor="name">Tên chi nhánh *</Label>
-              <Input
+              <Input 
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
@@ -378,7 +381,7 @@ const BranchesPage: React.FC = () => {
             </div>
             <div>
               <Label htmlFor="province">Tỉnh/Thành phố</Label>
-              <Input
+              <Input 
                 id="province"
                 value={formData.province}
                 onChange={(e) => setFormData(prev => ({ ...prev, province: e.target.value }))}
@@ -387,7 +390,7 @@ const BranchesPage: React.FC = () => {
             </div>
             <div>
               <Label htmlFor="district">Quận/Huyện</Label>
-              <Input
+              <Input 
                 id="district"
                 value={formData.district}
                 onChange={(e) => setFormData(prev => ({ ...prev, district: e.target.value }))}
@@ -396,7 +399,7 @@ const BranchesPage: React.FC = () => {
             </div>
             <div>
               <Label htmlFor="ward">Phường/Xã</Label>
-              <Input
+              <Input 
                 id="ward"
                 value={formData.ward}
                 onChange={(e) => setFormData(prev => ({ ...prev, ward: e.target.value }))}
@@ -405,7 +408,7 @@ const BranchesPage: React.FC = () => {
             </div>
             <div>
               <Label htmlFor="address">Địa chỉ</Label>
-              <Input
+              <Input 
                 id="address"
                 value={formData.address}
                 onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
@@ -446,7 +449,7 @@ const BranchesPage: React.FC = () => {
             </div>
             <div>
               <Label htmlFor="edit-name">Tên chi nhánh *</Label>
-              <Input
+              <Input 
                 id="edit-name"
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
@@ -455,7 +458,7 @@ const BranchesPage: React.FC = () => {
             </div>
             <div>
               <Label htmlFor="edit-province">Tỉnh/Thành phố</Label>
-              <Input
+              <Input 
                 id="edit-province"
                 value={formData.province}
                 onChange={(e) => setFormData(prev => ({ ...prev, province: e.target.value }))}
@@ -464,7 +467,7 @@ const BranchesPage: React.FC = () => {
             </div>
             <div>
               <Label htmlFor="edit-district">Quận/Huyện</Label>
-              <Input
+              <Input 
                 id="edit-district"
                 value={formData.district}
                 onChange={(e) => setFormData(prev => ({ ...prev, district: e.target.value }))}
@@ -473,7 +476,7 @@ const BranchesPage: React.FC = () => {
             </div>
             <div>
               <Label htmlFor="edit-ward">Phường/Xã</Label>
-              <Input
+              <Input 
                 id="edit-ward"
                 value={formData.ward}
                 onChange={(e) => setFormData(prev => ({ ...prev, ward: e.target.value }))}
@@ -482,7 +485,7 @@ const BranchesPage: React.FC = () => {
             </div>
             <div>
               <Label htmlFor="edit-address">Địa chỉ</Label>
-              <Input
+              <Input 
                 id="edit-address"
                 value={formData.address}
                 onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
@@ -517,7 +520,7 @@ const BranchesPage: React.FC = () => {
         variant="destructive"
         isLoading={deleteMutation.isPending}
       />
-    </div>
+          </div>
   );
 };
 

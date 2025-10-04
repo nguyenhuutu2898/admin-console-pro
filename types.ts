@@ -10,17 +10,17 @@ export type Branch = {
   id: string;
   code: string;          // Mã chi nhánh
   name: string;          // Tên chi nhánh
-  address: string;
-  province: string;      // Tỉnh/Thành phố
-  district: string;      // Quận/Huyện
-  ward: string;          // Phường/Xã
+  province?: string;     // Tỉnh/Thành phố
+  district?: string;     // Quận/Huyện
+  ward?: string;         // Phường/Xã
+  address?: string;
   phone?: string;
   email?: string;
   managerId?: string;
   managerName?: string;
-  isActive: boolean;
-  createdAt: string; 
-  updatedAt: string;
+  status?: 'active' | 'inactive';
+  createdAt?: string; 
+  updatedAt?: string;
 };
 
 // User
@@ -33,10 +33,10 @@ export type User = {
   branchId?: string;      // Liên kết chi nhánh
   branchName?: string;
   permissions: string[];
-  isActive: boolean;
+  status: 'active' | 'inactive';
   lastLogin?: string;
-  createdAt: string; 
-  updatedAt: string;
+  createdAt?: string; 
+  updatedAt?: string;
 };
 
 // Kiosk
@@ -49,29 +49,25 @@ export type Kiosk = {
   deviceId: string;
   devicePassword?: string;
   connectionCode: string;
-  status: 'online' | 'offline' | 'inactive';
+  status: 'connected' | 'disconnected' | 'inactive';
   location: string;
-  lastConnected?: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  lastSeenAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 // Advertisement (Quảng cáo)
 export type Advertisement = {
   id: string;
   code: string;          // Mã quảng cáo
-  title: string;         // Tên quảng cáo
-  description?: string;
-  type: 'image' | 'video' | 'banner';
-  duration: number;      // Thời lượng (giây)
-  startDate: string; 
-  endDate: string;
-  targetBranchIds: string[];
-  targetBranchNames: string[];
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  name: string;          // Tên quảng cáo
+  branchId?: string;     // Nếu ràng buộc chi nhánh
+  type: 'image' | 'video' | 'html' | 'playlist';
+  startDate?: string; 
+  endDate?: string;
+  status: 'draft' | 'scheduled' | 'running' | 'paused' | 'ended';
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 // TransactionType
@@ -80,9 +76,9 @@ export type TransactionType = {
   code: string;         // Mã giao dịch
   name: string;         // Tên giao dịch
   description?: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  status?: 'active' | 'inactive';
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 // Bộ lọc & phân trang chuẩn

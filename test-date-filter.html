@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Date Filter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .date-range {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .date-input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .result {
+            background: #f0f8ff;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test Date Range Filter</h1>
+        
+        <div class="date-range">
+            <div>
+                <div class="label">Từ ngày:</div>
+                <input type="date" class="date-input" id="startDate">
+            </div>
+            <div>
+                <div class="label">Đến ngày:</div>
+                <input type="date" class="date-input" id="endDate">
+            </div>
+        </div>
+        
+        <div class="result" id="result">
+            Chọn khoảng thời gian để xem kết quả
+        </div>
+        
+        <script>
+            const startDate = document.getElementById('startDate');
+            const endDate = document.getElementById('endDate');
+            const result = document.getElementById('result');
+            
+            function updateResult() {
+                const start = startDate.value;
+                const end = endDate.value;
+                
+                if (start && end) {
+                    result.innerHTML = `
+                        <strong>Khoảng thời gian đã chọn:</strong><br>
+                        Từ: ${new Date(start).toLocaleDateString('vi-VN')}<br>
+                        Đến: ${new Date(end).toLocaleDateString('vi-VN')}
+                    `;
+                } else if (start) {
+                    result.innerHTML = `
+                        <strong>Từ ngày:</strong> ${new Date(start).toLocaleDateString('vi-VN')}
+                    `;
+                } else if (end) {
+                    result.innerHTML = `
+                        <strong>Đến ngày:</strong> ${new Date(end).toLocaleDateString('vi-VN')}
+                    `;
+                } else {
+                    result.innerHTML = 'Chọn khoảng thời gian để xem kết quả';
+                }
+            }
+            
+            startDate.addEventListener('change', updateResult);
+            endDate.addEventListener('change', updateResult);
+        </script>
+    </div>
+</body>
+</html>

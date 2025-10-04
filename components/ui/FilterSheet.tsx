@@ -12,8 +12,9 @@ interface FilterOption {
 interface FilterField {
   key: string;
   label: string;
-  type: 'text' | 'select' | 'date';
+  type: 'text' | 'select' | 'date' | 'custom';
   options?: FilterOption[];
+  component?: React.ReactNode;
 }
 
 interface FilterSheetProps {
@@ -84,38 +85,47 @@ export const FilterSheet: React.FC<FilterSheetProps> = ({
             <div className="space-y-4">
               {fields.map((field) => (
                 <div key={field.key}>
-                  <label className="block text-sm font-medium mb-1">
-                    {field.label}
-                  </label>
-                  
-                  {field.type === 'text' && (
-                    <Input
-                      value={filters[field.key] || ''}
-                      onChange={(e) => handleFilterChange(field.key, e.target.value)}
-                      placeholder={`Nhập ${field.label.toLowerCase()}`}
-                    />
-                  )}
-                  
-                  {field.type === 'select' && (
-                    <Select
-                      value={filters[field.key] || ''}
-                      onChange={(e) => handleFilterChange(field.key, e.target.value)}
-                    >
-                      <option value="">Tất cả</option>
-                      {field.options?.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </Select>
-                  )}
-                  
-                  {field.type === 'date' && (
-                    <Input
-                      type="date"
-                      value={filters[field.key] || ''}
-                      onChange={(e) => handleFilterChange(field.key, e.target.value)}
-                    />
+                  {field.type === 'custom' ? (
+                    // Custom components handle their own labels
+                    <div>
+                      {field.component || <div>Custom component not found for {field.key}</div>}
+                    </div>
+                  ) : (
+                    <>
+                      <label className="block text-sm font-medium mb-1">
+                        {field.label}
+                      </label>
+                      
+                      {field.type === 'text' && (
+                        <Input
+                          value={filters[field.key] || ''}
+                          onChange={(e) => handleFilterChange(field.key, e.target.value)}
+                          placeholder={`Nhập ${field.label.toLowerCase()}`}
+                        />
+                      )}
+                      
+                      {field.type === 'select' && (
+                        <Select
+                          value={filters[field.key] || ''}
+                          onChange={(e) => handleFilterChange(field.key, e.target.value)}
+                        >
+                          <option value="">Tất cả</option>
+                          {field.options?.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </Select>
+                      )}
+                      
+                      {field.type === 'date' && (
+                        <Input
+                          type="date"
+                          value={filters[field.key] || ''}
+                          onChange={(e) => handleFilterChange(field.key, e.target.value)}
+                        />
+                      )}
+                    </>
                   )}
                 </div>
               ))}

@@ -4,7 +4,7 @@ import { UserRole } from '../types';
 export const useAuth = () => {
   const { user } = useAuthStore();
 
-  const can = (action: string, resource: string): boolean => {
+  const can = (action: string, resource: string, targetBranchId?: string): boolean => {
     if (!user) return false;
 
     // SUPER_ADMIN has all permissions
@@ -16,16 +16,25 @@ export const useAuth = () => {
     if (user.role === UserRole.BRANCH_ADMIN) {
       switch (resource) {
         case 'branches':
+          // Can only view/list branches, not create/edit/delete
           return action === 'view' || action === 'list';
         case 'users':
+          // Can manage users in their branch only
+          if (targetBranchId && targetBranchId !== user.branchId) return false;
           return ['view', 'list', 'create', 'edit', 'delete', 'reset-password'].includes(action);
         case 'kiosks':
+          // Can manage kiosks in their branch only
+          if (targetBranchId && targetBranchId !== user.branchId) return false;
           return ['view', 'list', 'create', 'edit', 'delete', 'connect-code'].includes(action);
         case 'ads':
+          // Can manage ads in their branch only
+          if (targetBranchId && targetBranchId !== user.branchId) return false;
           return ['view', 'list', 'create', 'edit', 'delete'].includes(action);
         case 'transaction-types':
+          // Can only view transaction types
           return action === 'view' || action === 'list';
         case 'settings':
+          // Can only view settings, not edit
           return action === 'view';
         default:
           return false;

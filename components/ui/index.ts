@@ -35,3 +35,10 @@ export { FilterChips } from './FilterChips';
 // Form components
 export { FormField } from './FormField';
 export { ConfirmDialog } from './ConfirmDialog';
+
+// Error components
+export { ErrorBanner } from './ErrorBanner';
+
+// Advanced filter components
+export { DateRangePicker } from './DateRangePicker';
+export { CascadingLocationSelect } from './CascadingLocationSelect';

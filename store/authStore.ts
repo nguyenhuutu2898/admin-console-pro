@@ -20,7 +20,7 @@ const defaultUser: User = {
   branchName: 'Chi nhánh Hà Nội',
   role: UserRole.SUPER_ADMIN,
   permissions: ['all'],
-  isActive: true,
+  status: 'active',
   lastLogin: '2024-01-15T10:30:00Z',
   createdAt: '2024-01-01T00:00:00Z',
   updatedAt: '2024-01-01T00:00:00Z',

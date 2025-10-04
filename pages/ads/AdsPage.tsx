@@ -10,6 +10,7 @@ import { Select } from '../../components/ui/Select';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { FilterSheet } from '../../components/ui/FilterSheet';
 import { FilterChips } from '../../components/ui/FilterChips';
+import { DateRangePicker } from '../../components/ui/DateRangePicker';
 import { PaginationFooter } from '../../components/ui/PaginationFooter';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
@@ -69,7 +70,7 @@ const AdsPage: React.FC = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Ad> }) =>
+    mutationFn: ({ id, data }: { id: string; data: Partial<Advertisement> }) =>
       adsApi.updateAd(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ads'] });
@@ -106,7 +107,7 @@ const AdsPage: React.FC = () => {
     createMutation.mutate(formData);
   };
 
-  const handleEdit = (ad: Ad) => {
+  const handleEdit = (ad: Advertisement) => {
     setEditingAd(ad);
     setFormData({
       code: ad.code,
@@ -128,7 +129,7 @@ const AdsPage: React.FC = () => {
     });
   };
 
-  const handleDelete = (ad: Ad) => {
+  const handleDelete = (ad: Advertisement) => {
     setDeletingAd(ad);
     setShowDeleteConfirm(true);
   };
@@ -166,7 +167,10 @@ const AdsPage: React.FC = () => {
              key === 'type' ? 'Loại quảng cáo' :
              key === 'startDate' ? 'Ngày bắt đầu' :
              key === 'endDate' ? 'Ngày kết thúc' : key,
-      value
+      value,
+      type: key === 'startDate' || key === 'endDate' ? 'date' :
+            key === 'status' ? 'status' :
+            key === 'type' ? 'default' : 'default'
     }));
 
   // Filter fields for FilterSheet
@@ -200,14 +204,18 @@ const AdsPage: React.FC = () => {
       ],
     },
     {
-      key: 'startDate',
-      label: 'Ngày bắt đầu',
-      type: 'date' as const,
-    },
-    {
-      key: 'endDate',
-      label: 'Ngày kết thúc',
-      type: 'date' as const,
+      key: 'dateRange',
+      label: 'Khoảng thời gian',
+      type: 'custom' as const,
+      component: (
+        <DateRangePicker
+          startDate={filters.startDate}
+          endDate={filters.endDate}
+          onStartDateChange={(value) => setFilters(prev => ({ ...prev, startDate: value }))}
+          onEndDateChange={(value) => setFilters(prev => ({ ...prev, endDate: value }))}
+          onClear={() => setFilters(prev => ({ ...prev, startDate: '', endDate: '' }))}
+        />
+      )
     },
   ];
 
