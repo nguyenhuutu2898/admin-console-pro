@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../componen
 import { Input } from '../../components/ui/Input';
 import { Label } from '../../components/ui/Label';
 import { Select } from '../../components/ui/Select';
+import { FloatingInput, FloatingSelect } from '../../components/ui';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { FilterSheet } from '../../components/ui/FilterSheet';
 import { FilterChips } from '../../components/ui/FilterChips';
@@ -399,43 +400,44 @@ const KiosksPage: React.FC = () => {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="code">Mã kiosk *</Label>
-              <Input
+              <FloatingInput
                 id="code"
+                label="Mã kiosk"
+                required={true}
                 value={formData.code}
                 onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value }))}
-                placeholder="Nhập mã kiosk"
               />
             </div>
             <div>
-              <Label htmlFor="name">Tên kiosk *</Label>
-              <Input
+              <FloatingInput
                 id="name"
+                label="Tên kiosk"
+                required={true}
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Nhập tên kiosk"
               />
             </div>
             <div>
-              <Label htmlFor="branchId">Chi nhánh *</Label>
-              <Input
+              <FloatingInput
                 id="branchId"
+                label="Chi nhánh"
+                required={true}
                 value={formData.branchId}
                 onChange={(e) => setFormData(prev => ({ ...prev, branchId: e.target.value }))}
-                placeholder="Nhập ID chi nhánh"
               />
             </div>
             <div>
-              <Label htmlFor="status">Trạng thái</Label>
-              <Select
+              <FloatingSelect
                 id="status"
+                label="Trạng thái"
                 value={formData.status}
                 onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'connected' | 'disconnected' | 'inactive' }))}
               >
+                <option value="">Chọn trạng thái</option>
                 <option value="disconnected">Chưa kết nối</option>
                 <option value="connected">Đã kết nối</option>
                 <option value="inactive">Không hoạt động</option>
-              </Select>
+              </FloatingSelect>
             </div>
             <div className="flex gap-2 pt-4">
               <Button 
@@ -461,43 +463,44 @@ const KiosksPage: React.FC = () => {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="edit-code">Mã kiosk *</Label>
-              <Input
+              <FloatingInput
                 id="edit-code"
+                label="Mã kiosk"
+                required={true}
                 value={formData.code}
                 onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value }))}
-                placeholder="Nhập mã kiosk"
               />
             </div>
             <div>
-              <Label htmlFor="edit-name">Tên kiosk *</Label>
-              <Input
+              <FloatingInput
                 id="edit-name"
+                label="Tên kiosk"
+                required={true}
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Nhập tên kiosk"
               />
             </div>
             <div>
-              <Label htmlFor="edit-branchId">Chi nhánh *</Label>
-              <Input
+              <FloatingInput
                 id="edit-branchId"
+                label="Chi nhánh"
+                required={true}
                 value={formData.branchId}
                 onChange={(e) => setFormData(prev => ({ ...prev, branchId: e.target.value }))}
-                placeholder="Nhập ID chi nhánh"
               />
             </div>
             <div>
-              <Label htmlFor="edit-status">Trạng thái</Label>
-              <Select
+              <FloatingSelect
                 id="edit-status"
+                label="Trạng thái"
                 value={formData.status}
                 onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'connected' | 'disconnected' | 'inactive' }))}
               >
+                <option value="">Chọn trạng thái</option>
                 <option value="disconnected">Chưa kết nối</option>
                 <option value="connected">Đã kết nối</option>
                 <option value="inactive">Không hoạt động</option>
-              </Select>
+              </FloatingSelect>
             </div>
             <div className="flex gap-2 pt-4">
               <Button 

@@ -6,6 +6,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/Dialog';
 import { Input } from '../../components/ui/Input';
 import { Label } from '../../components/ui/Label';
+import { Select } from '../../components/ui/Select';
+import { FloatingInput, FloatingSelect } from '../../components/ui';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { FilterSheet } from '../../components/ui/FilterSheet';
 import { FilterChips } from '../../components/ui/FilterChips';
@@ -356,86 +358,124 @@ const BranchesPage: React.FC = () => {
 
       {/* Create Modal */}
       <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Tạo chi nhánh</DialogTitle>
+            <DialogTitle>Thông tin chi nhánh</DialogTitle>
+            <p className="text-sm text-gray-600">Điền thông tin cho chi nhánh</p>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="code">Mã chi nhánh *</Label>
-              <Input
-                id="code"
-                value={formData.code}
-                onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value }))}
-                placeholder="Nhập mã chi nhánh"
-              />
+          <div className="space-y-6">
+            {/* Row 1: Mã chi nhánh và Mã chi nhánh trên core */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <FloatingInput
+                  id="branch-code"
+                  label="Mã chi nhánh"
+                  infoIcon={true}
+                  required={true}
+                  value={formData.code}
+                  onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value }))}
+                />
+              </div>
+              <div>
+                <FloatingInput
+                  id="core-code"
+                  label="Mã chi nhánh trên core"
+                  infoIcon={true}
+                  required={true}
+                  value={formData.code}
+                  onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value }))}
+                />
+              </div>
             </div>
+
+            {/* Row 2: Tên chi nhánh */}
             <div>
-              <Label htmlFor="name">Tên chi nhánh *</Label>
-              <Input 
-                id="name"
+              <FloatingInput
+                id="branch-name"
+                label="Tên chi nhánh"
+                infoIcon={true}
+                required={true}
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Nhập tên chi nhánh"
               />
             </div>
+
+            {/* Row 3: Địa chỉ */}
             <div>
-              <Label htmlFor="province">Tỉnh/Thành phố</Label>
-              <Input 
-                id="province"
-                value={formData.province}
-                onChange={(e) => setFormData(prev => ({ ...prev, province: e.target.value }))}
-                placeholder="Nhập tỉnh/thành phố"
-              />
-            </div>
-            <div>
-              <Label htmlFor="district">Quận/Huyện</Label>
-              <Input 
-                id="district"
-                value={formData.district}
-                onChange={(e) => setFormData(prev => ({ ...prev, district: e.target.value }))}
-                placeholder="Nhập quận/huyện"
-              />
-            </div>
-            <div>
-              <Label htmlFor="ward">Phường/Xã</Label>
-              <Input 
-                id="ward"
-                value={formData.ward}
-                onChange={(e) => setFormData(prev => ({ ...prev, ward: e.target.value }))}
-                placeholder="Nhập phường/xã"
-              />
-            </div>
-            <div>
-              <Label htmlFor="address">Địa chỉ</Label>
-              <Input 
-                id="address"
+              <FloatingInput
+                id="branch-address"
+                label="Địa chỉ (Ví dụ: 102 Lạc Long Quân)"
+                infoIcon={true}
+                required={true}
                 value={formData.address}
                 onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                placeholder="Nhập địa chỉ"
               />
             </div>
-            <div className="flex gap-2 pt-4">
-              <Button 
-                className="flex-1" 
-                onClick={handleCreate}
-                disabled={createMutation.isPending}
-              >
-                {createMutation.isPending ? 'Đang tạo...' : 'Tạo mới'}
-              </Button>
-              <Button variant="outline" onClick={() => setShowCreateModal(false)}>
-                Hủy
-              </Button>
+
+            {/* Row 4: Tỉnh/Thành phố, Quận/Huyện, Phường/Xã */}
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <FloatingSelect
+                  id="province"
+                  label="Tỉnh/Thành Phố"
+                  required={true}
+                  value={formData.province}
+                  onChange={(e) => setFormData(prev => ({ ...prev, province: e.target.value }))}
+                >
+                  <option value="">Chọn tỉnh/thành phố</option>
+                  <option value="HN">Hà Nội</option>
+                  <option value="HCM">TP. Hồ Chí Minh</option>
+                  <option value="DN">Đà Nẵng</option>
+                  <option value="CT">Cần Thơ</option>
+                </FloatingSelect>
+              </div>
+              <div>
+                <FloatingSelect
+                  id="district"
+                  label="Quận/ Huyện"
+                  required={true}
+                  value={formData.district}
+                  onChange={(e) => setFormData(prev => ({ ...prev, district: e.target.value }))}
+                >
+                  <option value="">Chọn quận/huyện</option>
+                  <option value="NK">Quận Ninh Kiều</option>
+                  <option value="BD">Quận Ba Đình</option>
+                  <option value="Q1">Quận 1</option>
+                </FloatingSelect>
+              </div>
+              <div>
+                <FloatingSelect
+                  id="ward"
+                  label="Phường/ Xã"
+                  required={true}
+                  value={formData.ward}
+                  onChange={(e) => setFormData(prev => ({ ...prev, ward: e.target.value }))}
+                >
+                  <option value="">Chọn phường/xã</option>
+                  <option value="AH">Phường An Hoà</option>
+                  <option value="PX">Phường Phúc Xá</option>
+                  <option value="BN">Phường Bến Nghé</option>
+                </FloatingSelect>
+              </div>
             </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-6">
+            <Button variant="outline" onClick={() => setShowCreateModal(false)}>
+              Hủy
+            </Button>
+            <Button onClick={handleCreate} disabled={createMutation.isPending}>
+              {createMutation.isPending ? 'Đang tạo...' : 'Tạo mới'}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
 
       {/* Edit Modal */}
       <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Thông tin chi nhánh</DialogTitle>
+            <p className="text-sm text-gray-600">Điền thông tin cho chi nhánh</p>
           </DialogHeader>
           <div className="space-y-4">
             <div>

@@ -1,5 +1,4 @@
 import React from 'react';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { Button } from './Button';
 import { cn } from '../../lib/utils';
 
@@ -20,7 +19,7 @@ export const ErrorBanner: React.FC<ErrorBannerProps> = ({
       className
     )}>
       <div className="flex items-center gap-3">
-        <AlertTriangle className="h-5 w-5 text-red-500" />
+        <div className="h-5 w-5 text-red-500">⚠️</div>
         <span className="text-red-700 font-medium">{message}</span>
       </div>
       {onRetry && (
@@ -30,7 +29,7 @@ export const ErrorBanner: React.FC<ErrorBannerProps> = ({
           onClick={onRetry}
           className="text-red-700 border-red-300 hover:bg-red-100"
         >
-          <RefreshCw className="h-4 w-4 mr-2" />
+          <span className="mr-2">🔄</span>
           Thử lại
         </Button>
       )}

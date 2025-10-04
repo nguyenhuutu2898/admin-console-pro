@@ -6,6 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/Dialog';
 import { Input } from '../../components/ui/Input';
 import { Label } from '../../components/ui/Label';
+import { FloatingInput, FloatingSelect } from '../../components/ui';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { FilterSheet } from '../../components/ui/FilterSheet';
 import { FilterChips } from '../../components/ui/FilterChips';
@@ -264,43 +265,42 @@ const TransactionTypesPage: React.FC = () => {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="code">Mã giao dịch *</Label>
-              <Input
+              <FloatingInput
                 id="code"
+                label="Mã giao dịch"
+                required={true}
                 value={formData.code}
                 onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value }))}
-                placeholder="Nhập mã giao dịch"
               />
             </div>
             <div>
-              <Label htmlFor="name">Tên giao dịch *</Label>
-              <Input
+              <FloatingInput
                 id="name"
+                label="Tên giao dịch"
+                required={true}
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Nhập tên giao dịch"
               />
             </div>
             <div>
-              <Label htmlFor="description">Mô tả</Label>
-              <Input
+              <FloatingInput
                 id="description"
+                label="Mô tả"
                 value={formData.description}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Nhập mô tả"
               />
             </div>
             <div>
-              <Label htmlFor="status">Trạng thái</Label>
-              <select
+              <FloatingSelect
                 id="status"
+                label="Trạng thái"
                 value={formData.status}
                 onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'active' | 'inactive' }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
+                <option value="">Chọn trạng thái</option>
                 <option value="active">Hoạt động</option>
                 <option value="inactive">Không hoạt động</option>
-              </select>
+              </FloatingSelect>
             </div>
             <div className="flex gap-2 pt-4">
               <Button 

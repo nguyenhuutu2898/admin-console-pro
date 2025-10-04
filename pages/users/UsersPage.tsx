@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../componen
 import { Input } from '../../components/ui/Input';
 import { Label } from '../../components/ui/Label';
 import { Select } from '../../components/ui/Select';
+import { FloatingInput, FloatingSelect } from '../../components/ui';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { FilterSheet } from '../../components/ui/FilterSheet';
 import { FilterChips } from '../../components/ui/FilterChips';
@@ -421,54 +422,57 @@ const UsersPage: React.FC = () => {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="username">Tên đăng nhập *</Label>
-              <Input
+              <FloatingInput
                 id="username"
+                label="Tên đăng nhập"
+                required={true}
                 value={formData.username}
                 onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
-                placeholder="Nhập tên đăng nhập"
               />
             </div>
             <div>
-              <Label htmlFor="fullName">Họ tên *</Label>
-              <Input
+              <FloatingInput
                 id="fullName"
+                label="Họ tên"
+                required={true}
                 value={formData.fullName}
                 onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
-                placeholder="Nhập họ tên"
               />
             </div>
             <div>
-              <Label htmlFor="role">Quyền hạn *</Label>
-              <Select
+              <FloatingSelect
                 id="role"
+                label="Quyền hạn"
+                required={true}
                 value={formData.role}
                 onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value as UserRole }))}
               >
+                <option value="">Chọn quyền hạn</option>
                 <option value="STAFF">Staff</option>
                 <option value="BRANCH_ADMIN">Branch Admin</option>
                 <option value="SUPER_ADMIN">Super Admin</option>
-              </Select>
+              </FloatingSelect>
             </div>
             <div>
-              <Label htmlFor="branchId">Chi nhánh</Label>
-              <Input
+              <FloatingInput
                 id="branchId"
+                label="Chi nhánh"
                 value={formData.branchId}
                 onChange={(e) => setFormData(prev => ({ ...prev, branchId: e.target.value }))}
-                placeholder="Nhập ID chi nhánh"
               />
             </div>
             <div>
-              <Label htmlFor="status">Trạng thái *</Label>
-              <Select
+              <FloatingSelect
                 id="status"
+                label="Trạng thái"
+                required={true}
                 value={formData.status}
                 onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'active' | 'inactive' }))}
               >
+                <option value="">Chọn trạng thái</option>
                 <option value="active">Hoạt động</option>
                 <option value="inactive">Tạm dừng</option>
-              </Select>
+              </FloatingSelect>
             </div>
             <div className="flex gap-2 pt-4">
               <Button 
@@ -494,54 +498,57 @@ const UsersPage: React.FC = () => {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="edit-username">Tên đăng nhập *</Label>
-              <Input
+              <FloatingInput
                 id="edit-username"
+                label="Tên đăng nhập"
+                required={true}
                 value={formData.username}
                 onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
-                placeholder="Nhập tên đăng nhập"
               />
             </div>
             <div>
-              <Label htmlFor="edit-fullName">Họ tên *</Label>
-              <Input
+              <FloatingInput
                 id="edit-fullName"
+                label="Họ tên"
+                required={true}
                 value={formData.fullName}
                 onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
-                placeholder="Nhập họ tên"
               />
             </div>
             <div>
-              <Label htmlFor="edit-role">Quyền hạn *</Label>
-              <Select
+              <FloatingSelect
                 id="edit-role"
+                label="Quyền hạn"
+                required={true}
                 value={formData.role}
                 onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value as UserRole }))}
               >
+                <option value="">Chọn quyền hạn</option>
                 <option value="STAFF">Staff</option>
                 <option value="BRANCH_ADMIN">Branch Admin</option>
                 <option value="SUPER_ADMIN">Super Admin</option>
-              </Select>
+              </FloatingSelect>
             </div>
             <div>
-              <Label htmlFor="edit-branchId">Chi nhánh</Label>
-              <Input
+              <FloatingInput
                 id="edit-branchId"
+                label="Chi nhánh"
                 value={formData.branchId}
                 onChange={(e) => setFormData(prev => ({ ...prev, branchId: e.target.value }))}
-                placeholder="Nhập ID chi nhánh"
               />
             </div>
             <div>
-              <Label htmlFor="edit-status">Trạng thái *</Label>
-              <Select
+              <FloatingSelect
                 id="edit-status"
+                label="Trạng thái"
+                required={true}
                 value={formData.status}
                 onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'active' | 'inactive' }))}
               >
+                <option value="">Chọn trạng thái</option>
                 <option value="active">Hoạt động</option>
                 <option value="inactive">Tạm dừng</option>
-              </Select>
+              </FloatingSelect>
             </div>
             <div className="flex gap-2 pt-4">
               <Button 

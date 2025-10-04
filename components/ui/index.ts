@@ -42,3 +42,7 @@ export { ErrorBanner } from './ErrorBanner';
 // Advanced filter components
 export { DateRangePicker } from './DateRangePicker';
 export { CascadingLocationSelect } from './CascadingLocationSelect';
+
+// Floating form components
+export { FloatingInput } from './FloatingInput';
+export { FloatingSelect } from './FloatingSelect';

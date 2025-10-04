@@ -4,6 +4,7 @@ import { Button } from '../../components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { Label } from '../../components/ui/Label';
+import { FloatingInput } from '../../components/ui';
 import { Switch } from '../../components/ui/Switch';
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 import { settingsApi } from '../../services/settings';
@@ -102,50 +103,46 @@ const SettingsPage: React.FC = () => {
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <Label htmlFor="sessionTimeout">Thời gian hết phiên (phút)</Label>
-                <Input
+                <FloatingInput
                   id="sessionTimeout"
+                  label="Thời gian hết phiên (phút)"
                   type="number"
                   value={settings.sessionTimeout || ''}
                   onChange={(e) => handleSettingChange('sessionTimeout', parseInt(e.target.value))}
                   disabled={!isSuperAdmin()}
-                  placeholder="30"
                 />
               </div>
               
               <div>
-                <Label htmlFor="maxLoginAttempts">Số lần đăng nhập tối đa</Label>
-                <Input
+                <FloatingInput
                   id="maxLoginAttempts"
+                  label="Số lần đăng nhập tối đa"
                   type="number"
                   value={settings.maxLoginAttempts || ''}
                   onChange={(e) => handleSettingChange('maxLoginAttempts', parseInt(e.target.value))}
                   disabled={!isSuperAdmin()}
-                  placeholder="5"
                 />
               </div>
               
               <div>
-                <Label htmlFor="passwordExpiryDays">Thời hạn mật khẩu (ngày)</Label>
-                <Input
+                <FloatingInput
                   id="passwordExpiryDays"
+                  label="Thời hạn mật khẩu (ngày)"
                   type="number"
                   value={settings.passwordExpiryDays || ''}
                   onChange={(e) => handleSettingChange('passwordExpiryDays', parseInt(e.target.value))}
                   disabled={!isSuperAdmin()}
-                  placeholder="90"
                 />
               </div>
               
               <div>
-                <Label htmlFor="kioskConnectionTimeout">Timeout kết nối Kiosk (giây)</Label>
-                <Input
+                <FloatingInput
                   id="kioskConnectionTimeout"
+                  label="Timeout kết nối Kiosk (giây)"
                   type="number"
                   value={settings.kioskConnectionTimeout || ''}
                   onChange={(e) => handleSettingChange('kioskConnectionTimeout', parseInt(e.target.value))}
                   disabled={!isSuperAdmin()}
-                  placeholder="30"
                 />
               </div>
             </div>
@@ -163,14 +160,13 @@ const SettingsPage: React.FC = () => {
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <Label htmlFor="advertisementRotationInterval">Thời gian xoay quảng cáo (giây)</Label>
-                <Input
+                <FloatingInput
                   id="advertisementRotationInterval"
+                  label="Thời gian xoay quảng cáo (giây)"
                   type="number"
                   value={settings.advertisementRotationInterval || ''}
                   onChange={(e) => handleSettingChange('advertisementRotationInterval', parseInt(e.target.value))}
                   disabled={!isSuperAdmin()}
-                  placeholder="10"
                 />
               </div>
             </div>
