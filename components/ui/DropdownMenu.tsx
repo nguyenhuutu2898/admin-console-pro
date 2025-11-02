@@ -1,16 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { cn } from '../../lib/utils';
 
 const DropdownMenuContext = React.createContext<{
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-}>({ open: false, setOpen: () => {} });
+  triggerRef: React.RefObject<HTMLDivElement>;
+}>({ open: false, setOpen: () => {}, triggerRef: { current: null } });
 
 const DropdownMenu = ({ children }: { children: React.ReactNode }) => {
   const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLDivElement>(null);
   return (
-    <DropdownMenuContext.Provider value={{ open, setOpen }}>
-      <div className="relative inline-block text-left">{children}</div>
+    <DropdownMenuContext.Provider value={{ open, setOpen, triggerRef }}>
+      <div ref={triggerRef} className="relative inline-block text-left">{children}</div>
     </DropdownMenuContext.Provider>
   );
 };
@@ -35,8 +38,9 @@ const DropdownMenuTrigger = ({ children, asChild }: { children: React.ReactNode;
 
 // FIX: Added 'align' prop to fix type error.
 const DropdownMenuContent = ({ children, className, align }: { children: React.ReactNode, className?: string, align?: 'start' | 'center' | 'end' }) => {
-  const { open, setOpen } = React.useContext(DropdownMenuContext);
+  const { open, setOpen, triggerRef } = React.useContext(DropdownMenuContext);
   const ref = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState<{ top: number; left: number; position: 'top' | 'bottom' }>({ top: 0, left: 0, position: 'bottom' });
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -47,20 +51,59 @@ const DropdownMenuContent = ({ children, className, align }: { children: React.R
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [setOpen]);
+
+  useEffect(() => {
+    if (open && triggerRef.current) {
+      const triggerRect = triggerRef.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const viewportWidth = window.innerWidth;
+      const dropdownWidth = 224; // w-56 = 14rem = 224px
+      const dropdownHeight = 200; // Estimated height
+      
+      const spaceBelow = viewportHeight - triggerRect.bottom;
+      const spaceAbove = triggerRect.top;
+      
+      let top = 0;
+      let left = triggerRect.right - dropdownWidth;
+      let position: 'top' | 'bottom' = 'bottom';
+      
+      // Adjust left position if dropdown would go off screen
+      if (left < 0) {
+        left = triggerRect.left;
+      }
+      
+      // If there's not enough space below, show above
+      if (spaceBelow < dropdownHeight && spaceAbove > spaceBelow) {
+        top = triggerRect.top - dropdownHeight - 8; // 8px gap
+        position = 'top';
+      } else {
+        top = triggerRect.bottom + 8; // 8px gap
+        position = 'bottom';
+      }
+      
+      setPosition({ top, left, position });
+    }
+  }, [open, triggerRef]);
   
   if (!open) return null;
   
-  return (
+  const dropdownContent = (
     <div
       ref={ref}
       className={cn(
-        "absolute right-0 mt-2 w-56 origin-top-right rounded-md bg-popover text-popover-foreground shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10 p-1",
+        "fixed w-56 rounded-md bg-popover text-popover-foreground shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50 p-1",
         className
       )}
+      style={{
+        top: `${position.top}px`,
+        left: `${position.left}px`,
+      }}
     >
-        {children}
+      {children}
     </div>
   );
+  
+  return createPortal(dropdownContent, document.body);
 };
 
 const DropdownMenuItem = React.forwardRef<HTMLButtonElement, React.ButtonHTMLAttributes<HTMLButtonElement>>(

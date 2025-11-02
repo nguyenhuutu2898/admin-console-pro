@@ -357,36 +357,38 @@ const KiosksPage: React.FC = () => {
                     </div>
                   </TableCell>
                   <TableCell className="w-[50px]">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {canEdit('kiosks') && (
-                          <DropdownMenuItem onClick={() => handleEdit(kiosk)}>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Chỉnh sửa
-                          </DropdownMenuItem>
-                        )}
-                        {canEdit('kiosks') && (
-                          <DropdownMenuItem onClick={() => handleConnect(kiosk)}>
-                            <Monitor className="h-4 w-4 mr-2" />
-                            Kết nối thiết bị
-                          </DropdownMenuItem>
-                        )}
-                        {canDelete('kiosks') && (
-                          <DropdownMenuItem 
-                            onClick={() => handleDelete(kiosk)}
-                            className="text-red-600"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Xóa kiosk
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    {(canEdit('kiosks') || canDelete('kiosks')) && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {canEdit('kiosks') && (
+                            <DropdownMenuItem onClick={() => handleEdit(kiosk)}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Chỉnh sửa
+                            </DropdownMenuItem>
+                          )}
+                          {canEdit('kiosks') && (
+                            <DropdownMenuItem onClick={() => handleConnect(kiosk)}>
+                              <Monitor className="h-4 w-4 mr-2" />
+                              Kết nối thiết bị
+                            </DropdownMenuItem>
+                          )}
+                          {canDelete('kiosks') && (
+                            <DropdownMenuItem 
+                              onClick={() => handleDelete(kiosk)}
+                              className="text-red-600"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Xóa kiosk
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                   </TableCell>
                 </TableRow>
               ))

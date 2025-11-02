@@ -310,30 +310,32 @@ const BranchesPage: React.FC = () => {
                     </div>
                   </TableCell>
                   <TableCell className="w-[50px]">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {canEdit('branches') && (
-                          <DropdownMenuItem onClick={() => handleEdit(branch)}>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Chỉnh sửa
-                          </DropdownMenuItem>
-                        )}
-                        {canDelete('branches') && (
-                          <DropdownMenuItem 
-                            onClick={() => handleDelete(branch)}
-                            className="text-red-600"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Xóa chi nhánh
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    {(canEdit('branches') || canDelete('branches')) && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {canEdit('branches') && (
+                            <DropdownMenuItem onClick={() => handleEdit(branch)}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Chỉnh sửa
+                            </DropdownMenuItem>
+                          )}
+                          {canDelete('branches') && (
+                            <DropdownMenuItem 
+                              onClick={() => handleDelete(branch)}
+                              className="text-red-600"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Xóa chi nhánh
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                   </TableCell>
                 </TableRow>
               ))

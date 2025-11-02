@@ -13,6 +13,7 @@ import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { MoreVertical, Edit, Trash2, Plus, Filter, Key, RotateCcw } from '../../components/Icons';
 import { usersApi } from '../../services/users';
+import { branchesApi } from '../../services/branches';
 import { useAuth } from '../../hooks/useAuth';
 import { User, UserFilter, UserRole } from '../../types';
 
@@ -41,6 +42,7 @@ const UsersPage: React.FC = () => {
     role: 'STAFF' as UserRole,
     branchId: '',
     status: 'active' as 'active' | 'inactive',
+    email: '',
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -57,6 +59,12 @@ const UsersPage: React.FC = () => {
       q: search,
       ...filters
     }),
+  });
+
+  // Fetch branches for display
+  const { data: branchesData } = useQuery({
+    queryKey: ['branches'],
+    queryFn: () => branchesApi.getBranches({ page: 1, limit: 1000 })
   });
 
   // Mutations
@@ -102,13 +110,20 @@ const UsersPage: React.FC = () => {
 
   // Helper functions
   const resetForm = () => {
-    setFormData({
+      setFormData({
       username: '',
       fullName: '',
       role: 'STAFF',
       branchId: '',
       status: 'active',
+      email: '',
     });
+  };
+
+  const getBranchName = (branchId: string) => {
+    if (!branchId || !branchesData?.items) return 'Không có';
+    const branch = branchesData.items.find(b => b.id === branchId);
+    return branch ? branch.name : 'Không có';
   };
 
   const handleCreate = () => {
@@ -124,6 +139,7 @@ const UsersPage: React.FC = () => {
       role: user.role,
       branchId: user.branchId || '',
       status: user.status,
+      email: user.email || '',
     });
     setShowEditModal(true);
   };
@@ -304,7 +320,7 @@ const UsersPage: React.FC = () => {
             isFilter={true}
           />
           
-          <Button 
+              <Button 
             variant="outline" 
             onClick={handleClearFilters}
             disabled={!Object.keys(filters).some(key => filters[key as keyof UserFilter]) && !search}
@@ -312,15 +328,15 @@ const UsersPage: React.FC = () => {
           >
             <RotateCcw className="h-4 w-4" />
             Xóa bộ lọc
-          </Button>
+              </Button>
           
           {canCreate('users') && (
             <Button className="ml-auto" onClick={() => setShowCreateModal(true)}>
-              <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-4 w-4 mr-2" />
               Thêm người dùng
-            </Button>
+              </Button>
           )}
-        </div>
+            </div>
       </div>
 
       {/* Table */}
@@ -329,9 +345,9 @@ const UsersPage: React.FC = () => {
           <TableHeader>
             <TableRow className="bg-gray-50">
               <TableHead className="font-semibold text-gray-900">Tên đăng nhập</TableHead>
-              <TableHead className="font-semibold text-gray-900">Họ tên</TableHead>
-              <TableHead className="font-semibold text-gray-900">Quyền hạn</TableHead>
+              <TableHead className="font-semibold text-gray-900">Tên nhân viên</TableHead>
               <TableHead className="font-semibold text-gray-900">Chi nhánh</TableHead>
+              <TableHead className="font-semibold text-gray-900">Thời gian cập nhật</TableHead>
               <TableHead className="font-semibold text-gray-900">Trạng thái</TableHead>
               <TableHead className="font-semibold text-gray-900 w-[50px]"></TableHead>
             </TableRow>
@@ -342,7 +358,7 @@ const UsersPage: React.FC = () => {
                 <TableCell colSpan={6}>
                   <LoadingSkeleton rows={5} columns={6} />
                 </TableCell>
-              </TableRow>
+                </TableRow>
             ) : usersData?.items.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6}>
@@ -369,17 +385,13 @@ const UsersPage: React.FC = () => {
                     <div className="font-medium">{user.fullName}</div>
                   </TableCell>
                   <TableCell>
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      user.role === 'SUPER_ADMIN' ? 'bg-purple-100 text-purple-800' :
-                      user.role === 'BRANCH_ADMIN' ? 'bg-blue-100 text-blue-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {getRoleLabel(user.role)}
-                    </span>
+                    <div className="text-sm text-gray-600">
+                      {getBranchName(user.branchId)}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="text-sm text-gray-600">
-                      {user.branchId || 'Không có'}
+                      {new Date(user.updatedAt).toLocaleDateString('vi-VN')}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -392,13 +404,14 @@ const UsersPage: React.FC = () => {
                     </span>
                   </TableCell>
                   <TableCell className="w-[50px]">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
+                    {(canEdit('users') || canDelete('users')) && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
                         {canEdit('users') && (
                           <DropdownMenuItem onClick={() => handleEdit(user)}>
                             <Edit className="h-4 w-4 mr-2" />
@@ -422,6 +435,7 @@ const UsersPage: React.FC = () => {
                         )}
                       </DropdownMenuContent>
                     </DropdownMenu>
+                    )}
                   </TableCell>
                 </TableRow>
               ))
@@ -529,73 +543,195 @@ const UsersPage: React.FC = () => {
 
       {/* Edit Modal */}
       <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-6xl">
           <DialogHeader>
-            <DialogTitle>Thông tin người dùng</DialogTitle>
+            <DialogTitle className="text-xl font-bold">Thông tin người dùng</DialogTitle>
+            <p className="text-sm text-gray-600 mt-1">Điền thông tin của người dùng</p>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <FloatingInput
-                id="edit-username"
-                label="Tên đăng nhập"
-                required={true}
-                value={formData.username}
-                onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
-              />
+          <div className="flex gap-8">
+            {/* Left Column - Avatar and Status */}
+            <div className="w-56 space-y-6">
+              {/* Avatar */}
+              <div className="relative">
+                <div className="w-48 h-48 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50">
+                  <div className="w-44 h-44 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
+                    <img 
+                      src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face" 
+                      alt="Avatar" 
+                      className="w-full h-full object-cover rounded-lg"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.nextElementSibling.style.display = 'flex';
+                      }}
+                    />
+                    <div className="w-full h-full bg-gray-200 rounded-lg flex items-center justify-center" style={{display: 'none'}}>
+                      <span className="text-6xl">👤</span>
+                    </div>
+                  </div>
+                </div>
+                <button className="absolute top-2 right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600">
+                  <Trash2 className="h-3 w-3 text-white" />
+                </button>
+              </div>
+              
+              {/* Status Toggle */}
+              <div className="text-center space-y-3">
+                <span className="text-sm font-medium text-gray-700">Trạng thái kích hoạt</span>
+                <div className="flex items-center justify-center space-x-3">
+                  <div className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    formData.status === 'active' ? 'bg-green-500' : 'bg-gray-300'
+                  }`}>
+                    <button
+                      type="button"
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        formData.status === 'active' ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                      onClick={() => setFormData(prev => ({ 
+                        ...prev, 
+                        status: prev.status === 'active' ? 'inactive' : 'active' 
+                      }))}
+                    />
+                  </div>
+                  <span className="text-sm font-medium text-green-600">Kích hoạt</span>
+                </div>
+              </div>
             </div>
-            <div>
-              <FloatingInput
-                id="edit-fullName"
-                label="Họ tên"
-                required={true}
-                value={formData.fullName}
-                onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
-              />
-            </div>
-            <div>
-              <FloatingSelect
-                label="Quyền hạn"
-                required={true}
-                value={formData.role}
-                onChange={(value) => setFormData(prev => ({ ...prev, role: value as UserRole }))}
-                options={[
-                  { value: "STAFF", label: "Staff" },
-                  { value: "BRANCH_ADMIN", label: "Branch Admin" },
-                  { value: "SUPER_ADMIN", label: "Super Admin" }
-                ]}
-              />
-            </div>
-            <div>
-              <FloatingInput
-                id="edit-branchId"
-                label="Chi nhánh"
-                value={formData.branchId}
-                onChange={(e) => setFormData(prev => ({ ...prev, branchId: e.target.value }))}
-              />
-            </div>
-            <div>
-              <FloatingSelect
-                label="Trạng thái"
-                required={true}
-                value={formData.status}
-                onChange={(value) => setFormData(prev => ({ ...prev, status: value as 'active' | 'inactive' }))}
-                options={[
-                  { value: "active", label: "Hoạt động" },
-                  { value: "inactive", label: "Tạm dừng" }
-                ]}
-              />
-            </div>
-            <div className="flex gap-2 pt-4">
-              <Button 
-                className="flex-1" 
-                onClick={handleUpdate}
-                disabled={updateMutation.isPending}
-              >
-                {updateMutation.isPending ? 'Đang lưu...' : 'Lưu'}
-              </Button>
-              <Button variant="outline" onClick={() => setShowEditModal(false)}>
-                Hủy
-              </Button>
+
+            {/* Right Column - Form Fields */}
+            <div className="flex-1 space-y-6">
+              {/* User Information Section */}
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="relative">
+                    <FloatingInput
+                      id="edit-username"
+                      label="Tên đăng nhập"
+                      required={true}
+                      value={formData.username}
+                      onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
+                    />
+                    <span className="absolute top-3 right-3 text-gray-400 text-sm">ⓘ</span>
+                  </div>
+                  <div className="relative">
+                    <FloatingInput
+                      id="edit-fullName"
+                      label="Họ tên nhân viên"
+                      required={true}
+                      value={formData.fullName}
+                      onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
+                    />
+                    <span className="absolute top-3 right-3 text-gray-400 text-sm">ⓘ</span>
+                  </div>
+                </div>
+                <div>
+                  <Button 
+                    className="w-full bg-green-600 hover:bg-green-700 text-white h-12 text-sm font-medium"
+                    onClick={() => setShowResetPasswordModal(true)}
+                  >
+                    <Key className="h-4 w-4 mr-2" />
+                    CẤP MẬT KHẨU MỚI
+                  </Button>
+                </div>
+                <div className="relative">
+                  <FloatingInput
+                    id="edit-email"
+                    label="Email (example: thutrang@agribank.vn)"
+                    value={formData.email || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                  />
+                  <span className="absolute top-3 right-3 text-gray-400 text-sm">ⓘ</span>
+                </div>
+              </div>
+
+              {/* Permission Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-bold text-gray-900 uppercase tracking-wide">THÔNG TIN PHÂN QUYỀN</h3>
+                
+                <div>
+                  <FloatingSelect
+                    label="Áp dụng chi nhánh"
+                    required={true}
+                    value={formData.branchId}
+                    onChange={(value) => setFormData(prev => ({ ...prev, branchId: value }))}
+                    options={branchesData?.items.map(branch => ({
+                      value: branch.id,
+                      label: branch.name
+                    })) || []}
+                  />
+                  <span className="text-red-500 text-sm ml-1">*</span>
+                </div>
+
+                <h4 className="text-md font-bold text-gray-900 uppercase tracking-wide">PHÂN QUYỀN CHÍNH</h4>
+                
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <label className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        checked={formData.role === 'BRANCH_ADMIN'}
+                        onChange={(e) => setFormData(prev => ({ 
+                          ...prev, 
+                          role: e.target.checked ? 'BRANCH_ADMIN' : 'STAFF' 
+                        }))}
+                        className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                      />
+                      <span className="text-sm font-medium">Admin chi nhánh</span>
+                    </label>
+                    <label className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        checked={formData.role === 'SUPER_ADMIN'}
+                        onChange={(e) => setFormData(prev => ({ 
+                          ...prev, 
+                          role: e.target.checked ? 'SUPER_ADMIN' : 'STAFF' 
+                        }))}
+                        className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                      />
+                      <span className="text-sm font-medium">Kiểm soát viên</span>
+                    </label>
+                  </div>
+                  <div className="space-y-4">
+                    <label className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                      />
+                      <span className="text-sm font-medium">Báo cáo</span>
+                    </label>
+                    <label className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        checked={formData.role === 'STAFF'}
+                        onChange={(e) => setFormData(prev => ({ 
+                          ...prev, 
+                          role: e.target.checked ? 'STAFF' : 'BRANCH_ADMIN' 
+                        }))}
+                        className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                      />
+                      <span className="text-sm font-medium">Giao dịch viên</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-6">
+                <Button 
+                  className="flex-1 bg-red-500 hover:bg-red-600 text-white h-12 font-bold text-sm"
+                  onClick={() => setShowEditModal(false)}
+                >
+                  <span className="mr-2 text-white">×</span>
+                  HỦY
+                </Button>
+                <Button 
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white h-12 font-bold text-sm"
+                  onClick={handleUpdate}
+                  disabled={updateMutation.isPending}
+                >
+                  <span className="mr-2 text-white">💾</span>
+                  {updateMutation.isPending ? 'Đang lưu...' : 'LƯU'}
+                </Button>
+              </div>
             </div>
           </div>
         </DialogContent>
