@@ -78,10 +78,9 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
           `w-full ${height} px-3 py-2 bg-transparent border border-[#ccc] rounded-md`,
           "text-left text-gray-800 text-sm",
           "transition-all duration-300 ease-linear",
-          "focus:border-blue-600 focus:outline-none",
+          "focus:outline-none focus:ring-0 focus:border-[#ccc]",
           "disabled:bg-gray-200 disabled:cursor-not-allowed",
-          "flex items-center justify-between",
-          isFocused && "border-blue-600"
+          "flex items-center justify-between"
         )}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
@@ -115,7 +114,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
                 placeholder="Tìm kiếm..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-0 focus:border-gray-300"
                 autoFocus
               />
             </div>

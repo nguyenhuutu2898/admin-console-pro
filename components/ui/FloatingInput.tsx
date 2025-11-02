@@ -65,7 +65,7 @@ export const FloatingInput: React.FC<FloatingInputProps> = ({
           "block w-full h-12 bg-transparent rounded-md", // 48px
           "border border-[#ccc] px-4",
           "transition-all duration-300 ease-linear",
-          "focus:border-blue-600",
+          "focus:outline-none focus:ring-0 focus:border-[#ccc]",
           className
         )}
       />

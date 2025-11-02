@@ -44,13 +44,21 @@ const DropdownMenuContent = ({ children, className, align }: { children: React.R
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (
+        ref.current &&
+        !ref.current.contains(target) &&
+        triggerRef.current &&
+        !triggerRef.current.contains(target)
+      ) {
         setOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [setOpen]);
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside, true);
+      return () => document.removeEventListener("mousedown", handleClickOutside, true);
+    }
+  }, [open, setOpen, triggerRef]);
 
   useEffect(() => {
     if (open && triggerRef.current) {
@@ -107,17 +115,25 @@ const DropdownMenuContent = ({ children, className, align }: { children: React.R
 };
 
 const DropdownMenuItem = React.forwardRef<HTMLButtonElement, React.ButtonHTMLAttributes<HTMLButtonElement>>(
-    ({ className, ...props }, ref) => {
+    ({ className, onClick, ...props }, ref) => {
     const { setOpen } = React.useContext(DropdownMenuContext);
+    const handleMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+    };
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+      if (onClick) {
+        setOpen(false);
+        onClick(e);
+      }
+    };
     return (
         <button
             ref={ref}
-            onClick={(e) => {
-                props.onClick?.(e);
-                setOpen(false);
-            }}
+            onMouseDown={handleMouseDown}
+            onClick={handleClick}
             className={cn(
-                "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 w-full text-left",
+                "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none border-0 focus:outline-none focus:ring-0 focus:border-0 transition-colors hover:bg-accent focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 w-full text-left",
                 className
             )}
             {...props}
