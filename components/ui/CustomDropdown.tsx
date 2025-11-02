@@ -77,8 +77,11 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
         className={cn(
           `w-full ${height} px-3 py-2 bg-transparent border border-[#ccc] rounded-md`,
           "text-left text-gray-800 text-sm",
-          "transition-all duration-300 ease-linear",
-          "focus:outline-none focus:ring-0 focus:border-[#ccc]",
+          "outline-none ring-0 ring-offset-0 shadow-none",
+          "focus:outline-none focus:ring-0 focus:ring-offset-0 focus:shadow-none",
+          "focus-visible:outline-none focus-visible:ring-0 focus-visible:shadow-none",
+          "active:outline-none active:ring-0 active:shadow-none",
+          "focus:border-[#ccc]",
           "disabled:bg-gray-200 disabled:cursor-not-allowed",
           "flex items-center justify-between"
         )}
@@ -114,7 +117,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
                 placeholder="Tìm kiếm..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-0 focus:border-gray-300"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded outline-none ring-0 ring-offset-0 shadow-none focus:outline-none focus:ring-0 focus:ring-offset-0 focus:shadow-none focus-visible:outline-none focus-visible:ring-0 focus-visible:shadow-none active:outline-none active:ring-0 active:shadow-none focus:border-gray-300"
                 autoFocus
               />
             </div>

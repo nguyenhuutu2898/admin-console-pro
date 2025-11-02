@@ -64,8 +64,11 @@ export const FloatingInput: React.FC<FloatingInputProps> = ({
         className={cn(
           "block w-full h-12 bg-transparent rounded-md", // 48px
           "border border-[#ccc] px-4",
-          "transition-all duration-300 ease-linear",
-          "focus:outline-none focus:ring-0 focus:border-[#ccc]",
+          "outline-none ring-0 ring-offset-0 shadow-none",
+          "focus:outline-none focus:ring-0 focus:ring-offset-0 focus:shadow-none",
+          "focus-visible:outline-none focus-visible:ring-0 focus-visible:shadow-none",
+          "active:outline-none active:ring-0 active:shadow-none",
+          "focus:border-[#ccc]",
           className
         )}
       />
